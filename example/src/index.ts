@@ -1,4 +1,4 @@
-import { SDKClient } from '../src/sdkClient';
+import { SDKClient } from 'vp-trade-sdk/sdkClient';
 import dotenv from 'dotenv';
 dotenv.config();
 

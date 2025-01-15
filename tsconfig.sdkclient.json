@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "src/**/*"
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "dist/vp-trade-sdk", // Output directory for the library
+        "declaration": true, // Generate declaration files
+        "declarationDir": "dist/vp-trade-sdk", // Directory for declaration files
+        "module": "commonjs", // CommonJS modules for compatibility
+        "esModuleInterop": true
+    }
+}
