@@ -1,4 +1,4 @@
-import { BigNumberish, ethers, parseEther, TransactionReceipt } from 'ethers';
+import { BigNumberish, ethers, parseEther, ContractTransactionReceipt } from 'ethers';
 import { ERC20TokenABI } from '../assets/ERC20';
 import { bondingAbi } from '../assets/bonding';
 import { frouterAbi } from '../assets/frouter';
@@ -73,7 +73,7 @@ export class TransactionManager {
         await this.checkAllowance(quoteAmt);
 
         const bondingCurve = new ethers.Contract(bondingCurveAddr, bondingAbi, this.wallet);
-        const buyTx: TransactionReceipt = await bondingCurve.buy(quoteAmt, prototypeTokenAddres);
+        const buyTx: ContractTransactionReceipt = await bondingCurve.buy(quoteAmt, prototypeTokenAddres);
 
         return buyTx.hash;
     }
@@ -88,7 +88,7 @@ export class TransactionManager {
         await this.checkAllowance(quoteAmt.toString(), prototypeTokenAddress);
 
         const bondingCurve = new ethers.Contract(bondingCurveAddr, bondingAbi, this.wallet);
-        const sellTx: TransactionReceipt = await bondingCurve.sell(quoteAmt, prototypeTokenAddress);
+        const sellTx: ContractTransactionReceipt = await bondingCurve.sell(quoteAmt, prototypeTokenAddress);
 
         return sellTx.hash;
     }
@@ -121,7 +121,8 @@ export class TransactionManager {
         if (!allowance || BigInt(allowance) < BigInt(amountInWei)) {
             try {
                 // for prototype token buy sell it is always approve allowance to virtual router.
-                const tx: TransactionReceipt = await tokenContract.approve(virtualRouter, amountInWei);
+                const tx: ContractTransactionReceipt = await tokenContract.approve(virtualRouter, amountInWei);
+
                 console.log(`Allowance has been approved: ${tx.hash}, amount: ${amountInWei}`);
                 return;
             }
