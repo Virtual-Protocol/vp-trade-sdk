@@ -12,6 +12,15 @@ interface ClientConfig {
     virtualApiKey: string;
 }
 
+interface TokenList {
+    tokens: Array<{
+        name: string;
+        address: string;
+        tokenAddress: string;
+        daoAddress: string;
+    }>;
+}
+
 export class SDKClient {
     private transactionManager: TransactionManager;
     private virtualApiManager: VirtualApiManager;
@@ -86,6 +95,38 @@ export class SDKClient {
         } catch (error) {
             throw new Error(`Failed to wait for transaction receipt: ${error}`);
         }
+    }
+
+    /**
+     * Get a List of Sentinent Tokens
+     * @param pageNumber Page number for pagination
+     * @param pageLimit Page size for pagination
+     * @returns Token list data
+     */
+    public async getSentinentListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
+        const tokenLists = await this.virtualApiManager.fetchVirtualTokenLists('sentinent', pageNumber, pageSize);
+        if (tokenLists.tokens.length > 0) {
+            console.log('No. of Sentinent token fetched: ' + tokenLists.tokens.length);
+        } else {
+            console.log('No Sentinent tokens found');
+        }
+        return tokenLists;
+    }
+
+    /**
+     * Get a List of Prototype Tokens
+     * @param pageNumber Page number for pagination
+     * @param pageLimit Page size for pagination
+     * @returns Token list data
+     */
+    public async getPrototypeListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
+        const tokenLists = await this.virtualApiManager.fetchVirtualTokenLists('prototype', pageNumber, pageSize);
+        if (tokenLists.tokens.length > 0) {
+            console.log('No. of Prototype token fetched: ' + tokenLists.tokens.length);
+        } else {
+            console.log('No Prototype tokens found');
+        }
+        return tokenLists;
     }
 
     /**
