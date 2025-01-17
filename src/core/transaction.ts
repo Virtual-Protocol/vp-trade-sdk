@@ -1,7 +1,8 @@
-import { BigNumberish, ethers, parseEther, ContractTransactionReceipt } from 'ethers';
+import { BigNumberish, ethers, parseEther, ContractTransactionReceipt, TransactionResponse } from 'ethers';
 import { ERC20TokenABI } from '../assets/ERC20';
 import { bondingAbi } from '../assets/bonding';
 import { frouterAbi } from '../assets/frouter';
+import { uniswapV2routerAbi } from '../assets/uniswapV2router';
 
 export class TransactionManager {
     private wallet: ethers.Wallet;
@@ -51,46 +52,172 @@ export class TransactionManager {
         }
     }
 
-    public async buySentientToken() { }
+    public async swapSentientToken(fromTokenAddress: string, toTokenAddress: string, amount: string, builderID?: number): Promise<string> {
 
-    public async sellSentientToken() { }
+        const uniswapV2routerAddr = '0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24';
+        const uniswapV2routerContract = new ethers.Contract(uniswapV2routerAddr, uniswapV2routerAbi, this.wallet);
 
-    // REACT_APP_TOKEN_ADDRESS = 0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b
-    // REACT_APP_VIRTUAL_FROUTER = 0x8292B43aB73EfAC11FAF357419C38ACF448202C5
-    // REACT_APP_VIRTUAL_FBONDING = 0xF66DeA7b3e897cD44A5a231c61B6B4423d613259
+        // Get the quote
+        const amountInInWei = ethers.parseEther(amount); // Input amount
+        const path = [fromTokenAddress, toTokenAddress]; // Token A -> Token B
+        const amountsOutInWei = await uniswapV2routerContract.getAmountsOut(amountInInWei, path);
+
+        // to have user to input slippage?
+        const amountOutMinInWei = amountsOutInWei[1].sub(amountsOutInWei[1].mul(5).div(100)); // 5% slippage
+
+        console.log(`Minimum amount out: ${ethers.formatEther(amountOutMinInWei)}`);
+
+        await this.checkAllowanceSwapSentientToken(amountInInWei.toString(), fromTokenAddress);
+
+        // Execute the swap
+        const to = this.wallet.address;
+        const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from now
+
+        // ABI-encoded `swap` function call
+        const iface = new ethers.Interface(uniswapV2routerAbi);
+        let data = iface.encodeFunctionData('swapExactTokensForTokens', [amountInInWei, amountOutMinInWei, path, to, deadline]);
+
+        // Append builderID if provided
+        if (!builderID && builderID !== undefined) {
+            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(builderID), 2); // Encode builderID as 2-byte hex
+            data += builderIDHex.slice(2); // Remove '0x' from builderIDHex and append
+        }
+
+        // Build the transaction
+        const tx = {
+            to: uniswapV2routerAddr,
+            data, // Encoded function call with builderID appended
+            value: ethers.parseEther('0'), // Ether value to send with the transaction if required
+            gasLimit: BigInt(30000), // Adjust based on estimated gas
+            gasPrice: (await this.provider.getFeeData()).gasPrice, // Fetch the current gas price
+            nonce: await this.wallet.getNonce(), // Current transaction count for the wallet
+            chainId: await this.provider.getNetwork().then((network) => network.chainId), // Current chain ID
+        };
+
+        // Sign the transaction
+        const signedTx = await this.wallet.signTransaction(tx);
+
+        // Broadcast the transaction
+        const txResponse: TransactionResponse = await this.sendTransaction(signedTx);
+
+        return txResponse.hash;
+    }
+
+    private async checkAllowanceSwapSentientToken(amountInWei: string, fromTokenAddress: string) {
+        const uniswapV2routerAddr = '0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24';
+        const tokenContract: ethers.Contract = new ethers.Contract(fromTokenAddress, ERC20TokenABI, this.wallet);
+
+        // check wallet balance first.
+        const tokenBalance: BigNumberish = await tokenContract.balanceOf(this.wallet.address)
+        if (!tokenBalance || BigInt(tokenBalance) < BigInt(amountInWei)) {
+            throw new Error(`Connected wallet doesn't have enough balance: ${tokenBalance}`);
+        }
+
+        // get allowance.
+        const allowance: BigNumberish = await tokenContract.allowance(this.wallet.address, uniswapV2routerAddr);
+
+        // send an approve allowance tx if allowance is less than amount.
+        if (!allowance || BigInt(allowance) < BigInt(amountInWei)) {
+            try {
+                // for prototype token buy sell it is always approve allowance to virtual router.
+                const tx: ContractTransactionReceipt = await tokenContract.approve(uniswapV2routerAddr, amountInWei);
+
+                console.log(`Allowance has been approved: ${tx.hash}, amount: ${amountInWei}`);
+                return;
+            }
+            catch (error) {
+                throw new Error(`Failed to approve allowance: ${error}`);
+            }
+        }
+        console.log(`Connected wallet has enough allowance amount: ${allowance}`);
+        return;
+    }
+
     /**
      * Buy prototype token with virtuals.
      * @param signedTx - The signed transaction string.
      * @returns The transaction response.
      */
-    public async buyPrototypeToken(prototypeTokenAddres: string, amount: string): Promise<string> {
+    public async buyPrototypeToken(prototypeTokenAddress: string, amount: string, builderID?: number): Promise<string> {
         const bondingCurveAddr = '0xF66DeA7b3e897cD44A5a231c61B6B4423d613259';
 
         // estimate how many of prototype token will be received.
-        const quoteAmt = await this.getQuote('BUY', amount, prototypeTokenAddres);
+        const quoteAmt = await this.getQuote('BUY', amount, prototypeTokenAddress);
+        console.log(`Estimated to receive of prototype token: ${prototypeTokenAddress} amount: ${quoteAmt}`);
 
         // check allowance
-        await this.checkAllowance(quoteAmt);
+        await this.checkAllowance(amount);
 
-        const bondingCurve = new ethers.Contract(bondingCurveAddr, bondingAbi, this.wallet);
-        const buyTx: ContractTransactionReceipt = await bondingCurve.buy(quoteAmt, prototypeTokenAddres);
+        // ABI-encoded `buy` function call
+        const abi = bondingAbi;
+        const iface = new ethers.Interface(abi);
+        let data = iface.encodeFunctionData('buy', [amount, prototypeTokenAddress]);
 
-        return buyTx.hash;
+        // Append builderID if provided
+        if (!builderID && builderID !== undefined) {
+            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(builderID), 2); // Encode builderID as 2-byte hex
+            data += builderIDHex.slice(2); // Remove '0x' from builderIDHex and append
+        }
+
+        // Build the transaction
+        const tx = {
+            to: bondingCurveAddr,
+            data, // Encoded function call with builderID appended
+            value: ethers.parseEther('0'), // Ether value to send with the transaction if required
+            gasLimit: BigInt(30000), // Adjust based on estimated gas
+            gasPrice: (await this.provider.getFeeData()).gasPrice, // Fetch the current gas price
+            nonce: await this.wallet.getNonce(), // Current transaction count for the wallet
+            chainId: await this.provider.getNetwork().then((network) => network.chainId), // Current chain ID
+        };
+
+        // Sign the transaction
+        const signedTx = await this.wallet.signTransaction(tx);
+
+        // Broadcast the transaction
+        const txResponse: TransactionResponse = await this.sendTransaction(signedTx);
+
+        return txResponse.hash;
     }
 
-    public async sellPrototypeToken(prototypeTokenAddress: string, amount: string): Promise<string> {
+    public async sellPrototypeToken(prototypeTokenAddress: string, amount: string, builderID?: number): Promise<string> {
         const bondingCurveAddr = '0xF66DeA7b3e897cD44A5a231c61B6B4423d613259';
 
         // estimate how many of virtuals token will be received.
         const quoteAmt = await this.getQuote('SELL', amount, prototypeTokenAddress);
+        console.log('Estimated to receive amount of virtuals: ', quoteAmt);
 
         // check allowance
-        await this.checkAllowance(quoteAmt.toString(), prototypeTokenAddress);
+        await this.checkAllowance(amount, prototypeTokenAddress);
 
-        const bondingCurve = new ethers.Contract(bondingCurveAddr, bondingAbi, this.wallet);
-        const sellTx: ContractTransactionReceipt = await bondingCurve.sell(quoteAmt, prototypeTokenAddress);
+        // ABI-encoded `sell` function call
+        const abi = bondingAbi;
+        const iface = new ethers.Interface(abi);
+        let data = iface.encodeFunctionData('sell', [amount, prototypeTokenAddress]);
 
-        return sellTx.hash;
+        // Append builderID if provided
+        if (!builderID && builderID !== undefined) {
+            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(builderID), 2); // Encode builderID as 2-byte hex
+            data += builderIDHex.slice(2); // Remove '0x' from builderIDHex and append
+        }
+
+        // Build the transaction
+        const tx = {
+            to: bondingCurveAddr,
+            data, // Encoded function call with builderID appended
+            value: ethers.parseEther('0'), // Ether value to send with the transaction if required
+            gasLimit: BigInt(30000), // Adjust based on estimated gas
+            gasPrice: (await this.provider.getFeeData()).gasPrice, // Fetch the current gas price
+            nonce: await this.wallet.getNonce(), // Current transaction count for the wallet
+            chainId: await this.provider.getNetwork().then((network) => network.chainId), // Current chain ID
+        };
+
+        // Sign the transaction
+        const signedTx = await this.wallet.signTransaction(tx);
+
+        // Broadcast the transaction
+        const txResponse: TransactionResponse = await this.sendTransaction(signedTx);
+
+        return txResponse.hash;
     }
 
 
@@ -150,17 +277,4 @@ export class TransactionManager {
             return await frouterContract.getAmountsOut(parseEther(amount), prototypeTokenAddress, '0x0000000000000000000000000000000000000000');
         }
     }
-
-    //     assetRate = 0.5
-    //       const K = 3000000000000;
-    //       const reserveA = +1000000000;
-    //       const k = K / (assetRate / 10000);
-    //       const reserveB = k / 1000000000;
-    //       const amountIn = +amount * 0.99; // 1% tax
-    //       const newReserveB = reserveB + amountIn;
-    //       const newReserveA = k / newReserveB;
-    //       const amountOut = reserveA - newReserveA;
-    //       return amountOut;
-    // percentage =
-    //     return (amountToReceive / +1000000000) * 100;
 }
