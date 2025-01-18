@@ -122,7 +122,7 @@ export class SDKClient {
         const to = tokenAddress;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.SELL, from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.BUY, from, to, amount, builderID);
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
@@ -140,7 +140,7 @@ export class SDKClient {
         const to = CONFIG.VIRTUALS_TOKEN_ADDR;
         
         // send transaction
-        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.BUY, from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.SELL, from, to, amount, builderID);
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
