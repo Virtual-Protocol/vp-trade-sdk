@@ -6,11 +6,9 @@ import { uniswapV2routerAbi } from '../assets/uniswapV2router';
 
 export class TransactionManager {
     private wallet: ethers.Wallet;
-    private provider: ethers.JsonRpcProvider;
 
-    constructor(wallet: ethers.Wallet, provider: ethers.JsonRpcProvider) {
+    constructor(wallet: ethers.Wallet) {
         this.wallet = wallet;
-        this.provider = provider;
     }
 
     /**
@@ -24,8 +22,6 @@ export class TransactionManager {
             throw new Error(`Invalid recipient address: ${to}`);
         }
 
-        const connectedWallet = this.wallet.connect(this.provider);
-
         const tx: ethers.TransactionRequest = {
             to,
             value: ethers.parseEther(value.toString()),
@@ -33,7 +29,7 @@ export class TransactionManager {
         };
 
         try {
-            return await connectedWallet.signTransaction(tx);
+            return await this.wallet.signTransaction(tx);
         } catch (error) {
             throw new Error(`Failed to sign transaction: ${error}`);
         }
@@ -46,14 +42,21 @@ export class TransactionManager {
      */
     public async sendTransaction(signedTx: string): Promise<ethers.TransactionResponse> {
         try {
-            return await this.provider.broadcastTransaction(signedTx);
+            const provider = this.wallet.provider;
+            if (!provider) {
+                throw new Error('No provider found for the connected wallet');
+            }
+            return await provider.broadcastTransaction(signedTx);
         } catch (error) {
             throw new Error(`Failed to send transaction: ${error}`);
         }
     }
 
     public async swapSentientToken(fromTokenAddress: string, toTokenAddress: string, amount: string, builderID?: number): Promise<string> {
-
+        const provider = this.wallet.provider;
+        if (!provider) {
+            throw new Error('No provider found for the connected wallet');
+        }
         const uniswapV2routerAddr = '0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24';
         const uniswapV2routerContract = new ethers.Contract(uniswapV2routerAddr, uniswapV2routerAbi, this.wallet);
 
@@ -89,9 +92,9 @@ export class TransactionManager {
             data, // Encoded function call with builderID appended
             value: ethers.parseEther('0'), // Ether value to send with the transaction if required
             gasLimit: BigInt(30000), // Adjust based on estimated gas
-            gasPrice: (await this.provider.getFeeData()).gasPrice, // Fetch the current gas price
+            gasPrice: (await provider.getFeeData()).gasPrice, // Fetch the current gas price
             nonce: await this.wallet.getNonce(), // Current transaction count for the wallet
-            chainId: await this.provider.getNetwork().then((network) => network.chainId), // Current chain ID
+            chainId: await provider.getNetwork().then((network) => network.chainId), // Current chain ID
         };
 
         // Sign the transaction
@@ -139,6 +142,10 @@ export class TransactionManager {
      * @returns The transaction response.
      */
     public async buyPrototypeToken(prototypeTokenAddress: string, amount: string, builderID?: number): Promise<string> {
+        const provider = this.wallet.provider;
+        if (!provider) {
+            throw new Error('No provider found for the connected wallet');
+        }
         const bondingCurveAddr = '0xF66DeA7b3e897cD44A5a231c61B6B4423d613259';
 
         // estimate how many of prototype token will be received.
@@ -165,9 +172,9 @@ export class TransactionManager {
             data, // Encoded function call with builderID appended
             value: ethers.parseEther('0'), // Ether value to send with the transaction if required
             gasLimit: BigInt(30000), // Adjust based on estimated gas
-            gasPrice: (await this.provider.getFeeData()).gasPrice, // Fetch the current gas price
+            gasPrice: (await provider.getFeeData()).gasPrice, // Fetch the current gas price
             nonce: await this.wallet.getNonce(), // Current transaction count for the wallet
-            chainId: await this.provider.getNetwork().then((network) => network.chainId), // Current chain ID
+            chainId: await provider.getNetwork().then((network) => network.chainId), // Current chain ID
         };
 
         // Sign the transaction
@@ -180,6 +187,10 @@ export class TransactionManager {
     }
 
     public async sellPrototypeToken(prototypeTokenAddress: string, amount: string, builderID?: number): Promise<string> {
+        const provider = this.wallet.provider;
+        if (!provider) {
+            throw new Error('No provider found for the connected wallet');
+        }
         const bondingCurveAddr = '0xF66DeA7b3e897cD44A5a231c61B6B4423d613259';
 
         // estimate how many of virtuals token will be received.
@@ -206,9 +217,9 @@ export class TransactionManager {
             data, // Encoded function call with builderID appended
             value: ethers.parseEther('0'), // Ether value to send with the transaction if required
             gasLimit: BigInt(30000), // Adjust based on estimated gas
-            gasPrice: (await this.provider.getFeeData()).gasPrice, // Fetch the current gas price
+            gasPrice: (await provider.getFeeData()).gasPrice, // Fetch the current gas price
             nonce: await this.wallet.getNonce(), // Current transaction count for the wallet
-            chainId: await this.provider.getNetwork().then((network) => network.chainId), // Current chain ID
+            chainId: await provider.getNetwork().then((network) => network.chainId), // Current chain ID
         };
 
         // Sign the transaction
