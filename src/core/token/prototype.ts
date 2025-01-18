@@ -4,7 +4,7 @@ import { bondingAbi } from '../../assets/bonding';
 import { frouterAbi } from '../../assets/frouter';
 import { PurchaseType } from '../../constant';
 
-export class TransactionManager {
+export class Prototype {
     private wallet: ethers.Wallet;
 
     constructor(wallet: ethers.Wallet) {

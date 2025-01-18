@@ -4,7 +4,7 @@ import { frouterAbi } from '../../assets/frouter';
 import { uniswapV2routerAbi } from '../../assets/uniswapV2router';
 import { PurchaseType } from '../../constant';
 
-export class TransactionManager {
+export class Sentient {
     private wallet: ethers.Wallet;
 
     constructor(wallet: ethers.Wallet) {
