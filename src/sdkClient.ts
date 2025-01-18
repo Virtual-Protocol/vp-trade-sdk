@@ -3,6 +3,8 @@ import { ProviderManager } from './core/provider';
 import { TransactionManager } from './core/transaction';
 import VirtualApiManager from './core/virtualProtocol';
 import { WalletManager } from './core/wallet';
+import { CONFIG, PurchaseType, TokenType } from './constant';
+import { Prototype, Sentient } from './core/token';
 
 interface ClientConfig {
     privateKey: string;
@@ -28,6 +30,8 @@ export class SDKClient {
     private transactionManager: TransactionManager;
     private virtualApiManager: VirtualApiManager;
     private wallet: WalletManager;
+    private prototype: Prototype;
+    private sentient: Sentient;
 
     constructor(config: ClientConfig) {
 
@@ -52,7 +56,9 @@ export class SDKClient {
             apiKey: config.virtualApiKey,
             apiUrl: config.virtualApiUrl
         });
-        this.transactionManager = new TransactionManager(this.wallet.getWallet());
+        this.prototype = new Prototype(this.wallet.getWallet(), CONFIG.VIRTUALS_TOKEN_ADDR, CONFIG.VIRTUAL_ROUTER_ADDR, CONFIG.BONDING_CURVE_ADDR);
+        this.sentient = new Sentient(this.wallet.getWallet(), CONFIG.UNISWAP_V2_ROUTER_ADDR)
+        this.transactionManager = new TransactionManager(this.wallet.getWallet(), this.prototype, this.sentient);
 
     }
 
@@ -71,21 +77,81 @@ export class SDKClient {
         return this.wallet.getWallet().signMessage(message);
     }
 
+    /**
+     * Swap Prototype tokens from Virtuals 
+     * @param tokenAddress Token swap from Virtuals
+     * @param amount Amount to swap
+     * @param builderID 
+     */
+    public async swapInSentientTokens(purchaseType: PurchaseType, tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+        const from = CONFIG.VIRTUALS_TOKEN_ADDR;
+        const to = tokenAddress;
+
+        // send transaction
+        const txResponse = await this.transactionManager.sendSentientTransaction(PurchaseType.BUY, from, to, amount, builderID);
+
+        // return transaction receipt
+        return this.obtainReceipt(txResponse);
+    }
 
     /**
-     * Send Ether to a recipient.
-     * Combines createTransaction, sendTransaction, and waiting for the receipt.
-     * @param value - The amount of Ether to send.
-     * @returns The transaction receipt.
+     * Swap Prototype tokens to Virtuals 
+     * @param tokenAddress Token swap to Virtuals
+     * @param amount Amount to swap
+     * @param builderID 
      */
-    public async sendEther(value: ethers.BigNumberish): Promise<ethers.TransactionReceipt> {
-        const tokenLists = await this.virtualApiManager.fetchTokenLists();
-        const signedTx = await this.transactionManager.createTransaction(tokenLists.tokens[0].address, value);
-        console.log('Signed transaction:', signedTx);
+    public async swapOutSentientTokens(purchaseType: PurchaseType, tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+        const from = tokenAddress;
+        const to = CONFIG.VIRTUALS_TOKEN_ADDR;
 
-        const txResponse = await this.transactionManager.sendTransaction(signedTx);
-        console.log('Transaction response:', txResponse);
+        // send transaction
+        const txResponse = await this.transactionManager.sendSentientTransaction(PurchaseType.SELL, from, to, amount, builderID);
 
+        // return transaction receipt
+        return this.obtainReceipt(txResponse);
+    }
+
+    /**
+     * Buy Prototype tokens from Virtuals 
+     * @param tokenAddress Token buy from Virtuals
+     * @param amount Amount to buy
+     * @param builderID 
+     */
+    public async buyPrototypeTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+        const from = CONFIG.VIRTUALS_TOKEN_ADDR;
+        const to = tokenAddress;
+
+        // send transaction
+        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.SELL, from, to, amount, builderID);
+
+        // return transaction receipt
+        return this.obtainReceipt(txResponse);
+    }
+
+    /**
+     * Sell Prototype tokenes to Virtuals
+     * @param tokenAddress Token sell to Virtuals
+     * @param amount Amount to sell
+     * @param builderID 
+     * @returns 
+     */
+    public async sellPrototypeTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+        const from = tokenAddress;
+        const to = CONFIG.VIRTUALS_TOKEN_ADDR;
+        
+        // send transaction
+        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.BUY, from, to, amount, builderID);
+
+        // return transaction receipt
+        return this.obtainReceipt(txResponse);
+    }
+
+    /**
+     * Obtain transaction receipt
+     * @param txResponse ethers.TransactionResponse
+     * @returns ethers.TransactionReceipt
+     */
+    private async obtainReceipt(txResponse: ethers.TransactionResponse): Promise<ethers.TransactionReceipt>{
         try {
             const txReceipt = await txResponse.wait();
 
@@ -97,27 +163,27 @@ export class SDKClient {
             return txReceipt;
         } catch (error) {
             throw new Error(`Failed to wait for transaction receipt: ${error}`);
-        }
+        } 
     }
 
     /**
      * Get a List of Sentinent Tokens
      * @param pageNumber Page number for pagination
-     * @param pageLimit Page size for pagination
+     * @param pageSize Page size for pagination
      * @returns Token list data
      */
     public async getSentinentListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
-        return await this.virtualApiManager.fetchVirtualTokenLists('sentinent', pageNumber, pageSize);
+        return await this.virtualApiManager.fetchVirtualTokenLists(TokenType.SENTIENT, pageNumber, pageSize);
     }
 
     /**
      * Get a List of Prototype Tokens
      * @param pageNumber Page number for pagination
-     * @param pageLimit Page size for pagination
+     * @param pageSize Page size for pagination
      * @returns Token list data
      */
     public async getPrototypeListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
-        return await this.virtualApiManager.fetchVirtualTokenLists('prototype', pageNumber, pageSize);
+        return await this.virtualApiManager.fetchVirtualTokenLists(TokenType.PROTOTYPE, pageNumber, pageSize);
     }
 
     /**
