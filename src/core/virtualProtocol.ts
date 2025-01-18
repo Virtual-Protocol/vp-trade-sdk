@@ -4,12 +4,15 @@ import needle from 'needle';
 dotenv.config();
 
 interface TokenList {
-    tokens: Array<{
-        name: string;
-        address: string;
-        tokenAddress: string;
-        daoAddress: string;
-    }>;
+    tokens: Token[];
+}
+
+interface Token {
+    name: string;
+    address: string;
+    tokenAddress: string;
+    daoAddress: string;
+    tbaAddress: string
 }
 
 interface VirtualApiConfig {
@@ -83,15 +86,13 @@ class VirtualApiManager {
             }
 
             // Map the response data to match the TokenList structure
-            const tokens = response.body.data.map((item: any) => ({
+            return response.body.data.map((item: Token) => ({
                 name: item.name,
                 tokenAddress: item.tokenAddress,
                 daoAddress: item.daoAddress,
                 tbaAddress: item.tbaAddress,
             }));
 
-            // Return the formatted response in TokenList format
-            return { tokens };
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred while fetching token lists.';
             throw new Error(`Error fetching token lists: ${errorMessage}`);
