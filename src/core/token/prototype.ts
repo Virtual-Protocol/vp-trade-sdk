@@ -43,15 +43,16 @@ export class Prototype extends TokenBase {
         }
 
         // Build the transaction
-        return {
+        let tx: ethers.TransactionRequest = {
             to: this.bondingCurveAddr,
             data, // Encoded function call with builderID appended
             value: ethers.parseEther('0'), // Ether value to send with the transaction if required
-            gasLimit: BigInt(30000), // Adjust based on estimated gas
-            gasPrice: (await provider.getFeeData()).gasPrice, // Fetch the current gas price
             nonce: await this.wallet.getNonce(), // Current transaction count for the wallet
             chainId: await provider.getNetwork().then((network) => network.chainId), // Current chain ID
-        };
+        }
+        tx = await this.estimateGas(tx);
+
+        return tx;
 
     }
 
@@ -81,15 +82,16 @@ export class Prototype extends TokenBase {
         }
 
         // Build the transaction
-        return {
+        let tx: ethers.TransactionRequest = {
             to: this.bondingCurveAddr,
             data, // Encoded function call with builderID appended
             value: ethers.parseEther('0'), // Ether value to send with the transaction if required
-            gasLimit: BigInt(30000), // Adjust based on estimated gas
-            gasPrice: (await provider.getFeeData()).gasPrice, // Fetch the current gas price
             nonce: await this.wallet.getNonce(), // Current transaction count for the wallet
             chainId: await provider.getNetwork().then((network) => network.chainId), // Current chain ID
-        };
+        }
+        tx = await this.estimateGas(tx);
+
+        return tx;
     }
 
     private async checkTokenAllowance(amountInWei: string, prototypeTokenAddress?: string) {

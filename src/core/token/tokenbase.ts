@@ -36,4 +36,41 @@ export class TokenBase {
         console.log(`Connected wallet has enough allowance amount: ${allowance}`);
         return;
     }
+
+    protected async estimateGas(tx: ethers.TransactionRequest): Promise<ethers.TransactionRequest> {
+        const provider = this.wallet.provider;
+
+        if (!provider) {
+            throw new Error('No provider found for the connected wallet');
+        }
+
+        let gas = await provider.estimateGas(tx)
+
+        // Info: Estimate gas top up 15%.
+        gas = (gas * ethers.toBigInt(115)) / ethers.toBigInt(100);
+
+        const fee = await provider.getFeeData();
+        if (fee.maxFeePerGas && fee.maxPriorityFeePerGas) {
+
+            // EIP-1559 Transaction
+            const adjustedMaxFeePerGas = (fee.maxFeePerGas * ethers.toBigInt(115)) / ethers.toBigInt(100); // 15% buffer
+            const adjustedMaxPriorityFeePerGas = (fee.maxPriorityFeePerGas * ethers.toBigInt(115)) / ethers.toBigInt(100); // 15% buffer
+
+            tx.gasLimit = gas;
+            tx.maxFeePerGas = adjustedMaxFeePerGas;
+            tx.maxPriorityFeePerGas = adjustedMaxPriorityFeePerGas;
+            return tx;
+
+        } else if (fee.gasPrice) {
+
+            // Non-EIP-1559 (legacy transaction)
+            const adjustedGasPrice = (fee.gasPrice * ethers.toBigInt(115)) / ethers.toBigInt(100); // 15% buffer
+            tx.gasLimit = gas;
+            tx.gasPrice = adjustedGasPrice;
+            return tx;
+
+        }
+
+        throw new Error('Failed to estimate gas: no fee data available');
+    }
 }
