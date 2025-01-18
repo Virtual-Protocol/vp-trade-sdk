@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import needle from 'needle';
+import { TokenType } from './../constant';
 
 dotenv.config();
 
@@ -50,12 +51,12 @@ class VirtualApiManager {
 
             // Define status based on the type
             let virtualStatus: string[] = [];
-            if (type === 'prototype') {
+            if (type === TokenType.PROTOTYPE) {
                 virtualStatus = ['UNDERGRAD']; // Single status for prototype
-            } else if (type === 'sentinent') {
+            } else if (type === TokenType.SENTIENT) {
                 virtualStatus = ['AVAILABLE', 'ACTIVATING']; // Two statuses for sentinent
             } else {
-                throw new Error(`Invalid type provided: ${type}. Expected 'prototype' or 'sentinent'.`);
+                throw new Error(`Invalid token type provided: ${type}. Expected 'PROTOTYPE' or 'SENTIENT'.`);
             }
 
             // Construct query parameters dynamically into a flat query object
