@@ -13,12 +13,15 @@ interface ClientConfig {
 }
 
 interface TokenList {
-    tokens: Array<{
-        name: string;
-        address: string;
-        tokenAddress: string;
-        daoAddress: string;
-    }>;
+    tokens: Token[];
+}
+
+interface Token {
+    name: string;
+    address: string;
+    tokenAddress: string;
+    daoAddress: string;
+    tbaAddress: string
 }
 
 export class SDKClient {
@@ -49,7 +52,7 @@ export class SDKClient {
             apiKey: config.virtualApiKey,
             apiUrl: config.virtualApiUrl
         });
-        this.transactionManager = new TransactionManager(this.wallet.getWallet(), provider.getProvider());
+        this.transactionManager = new TransactionManager(this.wallet.getWallet());
 
     }
 
@@ -104,13 +107,7 @@ export class SDKClient {
      * @returns Token list data
      */
     public async getSentinentListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
-        const tokenLists = await this.virtualApiManager.fetchVirtualTokenLists('sentinent', pageNumber, pageSize);
-        if (tokenLists.tokens.length > 0) {
-            console.log('No. of Sentinent token fetched: ' + tokenLists.tokens.length);
-        } else {
-            console.log('No Sentinent tokens found');
-        }
-        return tokenLists;
+        return await this.virtualApiManager.fetchVirtualTokenLists('sentinent', pageNumber, pageSize);
     }
 
     /**
@@ -120,13 +117,7 @@ export class SDKClient {
      * @returns Token list data
      */
     public async getPrototypeListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
-        const tokenLists = await this.virtualApiManager.fetchVirtualTokenLists('prototype', pageNumber, pageSize);
-        if (tokenLists.tokens.length > 0) {
-            console.log('No. of Prototype token fetched: ' + tokenLists.tokens.length);
-        } else {
-            console.log('No Prototype tokens found');
-        }
-        return tokenLists;
+        return await this.virtualApiManager.fetchVirtualTokenLists('prototype', pageNumber, pageSize);
     }
 
     /**
