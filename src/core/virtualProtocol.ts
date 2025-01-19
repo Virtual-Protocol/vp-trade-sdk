@@ -18,24 +18,18 @@ interface Token {
 
 interface VirtualApiConfig {
     apiUrl: string;
-    apiKey: string;
 }
 
 class VirtualApiManager {
     private apiUrl: string;
-    private apiKey: string;
 
     constructor(config: VirtualApiConfig) {
 
         if (!config.apiUrl) {
             throw new Error('Virtuals API URL cannot be empty');
         };
-        if (!config.apiKey) {
-            throw new Error('Virtuals API key cannot be empty');
-        }
 
         this.apiUrl = config.apiUrl;
-        this.apiKey = config.apiKey;
     }
 
     /**
@@ -104,7 +98,6 @@ class VirtualApiManager {
         try {
             const response = await needle('get', this.apiUrl, {
                 headers: {
-                    Authorization: `Bearer ${this.apiKey}`,
                     'Content-Type': 'application/json',
                 },
             });

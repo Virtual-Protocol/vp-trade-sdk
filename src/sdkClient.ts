@@ -11,7 +11,6 @@ interface ClientConfig {
     rpcUrl: string;
     apiKey: string;
     virtualApiUrl: string;
-    virtualApiKey: string;
 }
 
 interface TokenList {
@@ -53,7 +52,6 @@ export class SDKClient {
             provider: provider.getProvider(),
         });
         this.virtualApiManager = new VirtualApiManager({
-            apiKey: config.virtualApiKey,
             apiUrl: config.virtualApiUrl
         });
         this.prototype = new Prototype(this.wallet.getWallet(), CONFIG.VIRTUALS_TOKEN_ADDR, CONFIG.VIRTUAL_ROUTER_ADDR, CONFIG.BONDING_CURVE_ADDR);
