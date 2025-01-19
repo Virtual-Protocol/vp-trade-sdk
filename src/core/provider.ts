@@ -21,7 +21,8 @@ export class ProviderManager {
         }
 
         // Initialize the provider
-        this.provider = new ethers.JsonRpcProvider(`${config.rpcUrl}?apiKey=${config.apiKey}`);
+        // this.provider = new ethers.JsonRpcProvider(`${config.rpcUrl}?apiKey=${config.apiKey}`);
+        this.provider = new ethers.AlchemyProvider('base', config.apiKey);
     }
 
     public static getInstance(config: ProviderConfig): ProviderManager {
