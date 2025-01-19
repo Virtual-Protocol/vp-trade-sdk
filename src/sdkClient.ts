@@ -83,12 +83,12 @@ export class SDKClient {
      * @param amount Amount to swap
      * @param builderID 
      */
-    public async swapInSentientTokens(purchaseType: PurchaseType, tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+    public async swapInSentientTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
         const from = CONFIG.VIRTUALS_TOKEN_ADDR;
         const to = tokenAddress;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendSentientTransaction(PurchaseType.BUY, from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendSentientTransaction(from, to, amount, builderID);
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
@@ -100,12 +100,12 @@ export class SDKClient {
      * @param amount Amount to swap
      * @param builderID 
      */
-    public async swapOutSentientTokens(purchaseType: PurchaseType, tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+    public async swapOutSentientTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
         const from = tokenAddress;
         const to = CONFIG.VIRTUALS_TOKEN_ADDR;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendSentientTransaction(PurchaseType.SELL, from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendSentientTransaction(from, to, amount, builderID);
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
@@ -138,7 +138,7 @@ export class SDKClient {
     public async sellPrototypeTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
         const from = tokenAddress;
         const to = CONFIG.VIRTUALS_TOKEN_ADDR;
-        
+
         // send transaction
         const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.SELL, from, to, amount, builderID);
 
@@ -198,7 +198,7 @@ export class SDKClient {
      * @param txResponse ethers.TransactionResponse
      * @returns ethers.TransactionReceipt
      */
-     private async obtainReceipt(txResponse: ethers.TransactionResponse): Promise<ethers.TransactionReceipt>{
+    private async obtainReceipt(txResponse: ethers.TransactionResponse): Promise<ethers.TransactionReceipt> {
         try {
             const txReceipt = await txResponse.wait();
 
@@ -210,6 +210,6 @@ export class SDKClient {
             return txReceipt;
         } catch (error) {
             throw new Error(`Failed to wait for transaction receipt: ${error}`);
-        } 
+        }
     }
 }
