@@ -147,26 +147,6 @@ export class SDKClient {
     }
 
     /**
-     * Obtain transaction receipt
-     * @param txResponse ethers.TransactionResponse
-     * @returns ethers.TransactionReceipt
-     */
-    private async obtainReceipt(txResponse: ethers.TransactionResponse): Promise<ethers.TransactionReceipt>{
-        try {
-            const txReceipt = await txResponse.wait();
-
-            if (!txReceipt) {
-                throw new Error('Transaction receipt is null.');
-            }
-
-            console.log('Transaction receipt:', txReceipt);
-            return txReceipt;
-        } catch (error) {
-            throw new Error(`Failed to wait for transaction receipt: ${error}`);
-        } 
-    }
-
-    /**
      * Get a List of Sentinent Tokens
      * @param pageNumber Page number for pagination
      * @param pageSize Page size for pagination
@@ -211,5 +191,25 @@ export class SDKClient {
         } catch {
             return false;
         }
+    }
+
+    /**
+     * Obtain transaction receipt
+     * @param txResponse ethers.TransactionResponse
+     * @returns ethers.TransactionReceipt
+     */
+     private async obtainReceipt(txResponse: ethers.TransactionResponse): Promise<ethers.TransactionReceipt>{
+        try {
+            const txReceipt = await txResponse.wait();
+
+            if (!txReceipt) {
+                throw new Error('Transaction receipt is null.');
+            }
+
+            console.log('Transaction receipt:', txReceipt);
+            return txReceipt;
+        } catch (error) {
+            throw new Error(`Failed to wait for transaction receipt: ${error}`);
+        } 
     }
 }

@@ -22,8 +22,6 @@ export class Prototype extends TokenBase {
             throw new Error('No provider found for the connected wallet');
         }
 
-        // const bondingCurveAddr = '0xF66DeA7b3e897cD44A5a231c61B6B4423d613259';
-
         // estimate how many of prototype token will be received.
         const quoteAmt = await this.getQuote(PurchaseType.BUY, amount, prototypeTokenAddress);
         console.log(`Estimated to receive of prototype token: ${prototypeTokenAddress} amount: ${quoteAmt}`);
@@ -61,7 +59,6 @@ export class Prototype extends TokenBase {
         if (!provider) {
             throw new Error('No provider found for the connected wallet');
         }
-        // const bondingCurveAddr = '0xF66DeA7b3e897cD44A5a231c61B6B4423d613259';
 
         // estimate how many of virtuals token will be received.
         const quoteAmt = await this.getQuote(PurchaseType.SELL, amount, prototypeTokenAddress);

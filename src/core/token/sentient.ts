@@ -15,7 +15,7 @@ export class Sentient extends TokenBase {
         if (!provider) {
             throw new Error('No provider found for the connected wallet');
         }
-        // const uniswapV2routerAddr = '0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24';
+
         const uniswapV2routerContract = new ethers.Contract(this.uniswapV2routerAddr, uniswapV2routerAbi, this.wallet);
 
         // Get the quote
