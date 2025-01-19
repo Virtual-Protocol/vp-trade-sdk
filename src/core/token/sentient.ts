@@ -10,7 +10,7 @@ export class Sentient extends TokenBase {
         this.uniswapV2routerAddr = uniswapV2routerAddr;
     }
 
-    public async swapSentientToken(fromTokenAddress: string, toTokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionRequest> {
+    public async swapSentientToken(fromTokenAddress: string, toTokenAddress: string, amount: string, builderID?: number, slippage?: number): Promise<ethers.TransactionRequest> {
         const provider = this.wallet.provider;
         if (!provider) {
             throw new Error('No provider found for the connected wallet');
@@ -23,10 +23,20 @@ export class Sentient extends TokenBase {
         const path = [fromTokenAddress, toTokenAddress]; // Token A -> Token B
         const amountsOutInWei = await uniswapV2routerContract.getAmountsOut(amountInInWei, path);
 
-        // to have user to input slippage?
-        const amountOutMinInWei = amountsOutInWei[1].sub(amountsOutInWei[1].mul(5).div(100)); // 5% slippage
+        // Default slippage percentage to 5%
+        let userSlippagePercentage = 5;
+        if (slippage !== undefined) {
+            userSlippagePercentage = slippage; // Replace with user input
+        }
 
-        console.log(`Minimum amount out: ${ethers.formatEther(amountOutMinInWei)}`);
+        // Convert slippage percentage to a fraction
+        const slippageFraction = ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(100);
+
+        // Calculate amountOutMinInWei with the user-defined slippage
+        const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) -
+            (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction) / ethers.toBigInt(10000);
+
+        console.log(`Minimum amount out with ${userSlippagePercentage}% slippage:`, amountOutMinInWei.toString());
 
         await this.checkTokenAllowance(amountInInWei.toString(), fromTokenAddress);
 
