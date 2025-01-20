@@ -23,20 +23,39 @@ export class Sentient extends TokenBase {
         const path = [fromTokenAddress, toTokenAddress]; // Token A -> Token B
         const amountsOutInWei = await uniswapV2routerContract.getAmountsOut(amountInInWei, path);
 
-        // Default slippage percentage to 5%
-        let userSlippagePercentage = 5;
-        if (slippage !== undefined) {
-            userSlippagePercentage = slippage; // Replace with user input
-        }
+        // // Default slippage percentage to 5%
+        // let userSlippagePercentage = 5;
+        // if (slippage !== undefined) {
+        //     userSlippagePercentage = slippage; // Replace with user input
+        // }
 
-        // Convert slippage percentage to a fraction
-        const slippageFraction = ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(100);
+        // // Convert slippage percentage to a fraction
+        // const slippageFraction = ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(100);
+
+        // // Calculate amountOutMinInWei with the user-defined slippage
+        // const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) -
+        //     (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction) / ethers.toBigInt(10000);
+
+        // Default slippage percentage to 5%
+        const userSlippagePercentage = slippage ? slippage : 5; // Use provided slippage or default to 5%
+        console.log('userSlippagePercentage:', userSlippagePercentage)
 
         // Calculate amountOutMinInWei with the user-defined slippage
-        const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) -
-            (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction) / ethers.toBigInt(10000);
+        const slippageFraction = ethers.toBigInt(userSlippagePercentage) / ethers.toBigInt(100); // Convert percentage to fraction
+        console.log('ethers.toBigInt(userSlippagePercentage):', ethers.toBigInt(userSlippagePercentage))
+        console.log('ethers.toBigInt(100):', ethers.toBigInt(100))
+        console.log('slippageFraction:', slippageFraction)
+        const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) - (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction);
+        console.log('ethers.toBigInt(amountsOutInWei[1]):', ethers.toBigInt(amountsOutInWei[1]))
+        console.log('(ethers.toBigInt(amountsOutInWei[1]) * slippageFraction):', (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction))
 
         console.log(`Minimum amount out with ${userSlippagePercentage}% slippage:`, amountOutMinInWei.toString());
+
+        console.log('amountOutMinInWei: ', amountOutMinInWei.toString());
+        console.log('amountsOutInWei', amountsOutInWei.toString());
+        console.log('amountInInWei', amountInInWei.toString());
+        console.log('path', path.toString());
+
 
         await this.checkTokenAllowance(amountInInWei.toString(), fromTokenAddress);
 
@@ -56,6 +75,7 @@ export class Sentient extends TokenBase {
 
         // Build the transaction
         let tx: ethers.TransactionRequest = {
+            from: this.wallet.address,
             to: this.uniswapV2routerAddr,
             data, // Encoded function call with builderID appended
             value: ethers.parseEther('0'), // Ether value to send with the transaction if required

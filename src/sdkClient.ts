@@ -165,6 +165,15 @@ export class SDKClient {
     }
 
     /**
+     * Get a List of Prototype or Sentient Tokens by Token Address
+     * @param tokenAddress Token's address
+     * @returns Token list data
+     */
+    public async fetchToken(tokenAddress: string): Promise<TokenList> {
+        return await this.virtualApiManager.fetchVirtualTokensByAddress(tokenAddress);
+    }
+
+    /**
      * Validate a private key.
      * @param privateKey - The private key to validate
      */

@@ -11,8 +11,11 @@ export class TokenBase {
     protected async checkAllowanceAndApprove(amountInWei: string, tokenAddress: string, routerAddress: string) {
         const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
 
+        console.log('amountInWei',amountInWei);
+
         // Check wallet balance first.
         const tokenBalance: BigNumberish = await tokenContract.balanceOf(this.wallet.address);
+        console.log('tokenBalance:', tokenBalance)
         if (!tokenBalance || BigInt(tokenBalance) < BigInt(amountInWei)) {
             throw new Error(`Connected wallet doesn't have enough balance: ${tokenBalance}`);
         }
@@ -48,10 +51,12 @@ export class TokenBase {
 
         // Info: Estimate gas top up 15%.
         gas = (gas * ethers.toBigInt(115)) / ethers.toBigInt(100);
+        console.log('gas', gas)
 
         const fee = await provider.getFeeData();
         if (fee.maxFeePerGas && fee.maxPriorityFeePerGas) {
-
+            console.log('fee.maxFeePerGas', fee.maxFeePerGas)
+            console.log('fee.maxPriorityFeePerGas)', fee.maxPriorityFeePerGas)
             // EIP-1559 Transaction
             const adjustedMaxFeePerGas = (fee.maxFeePerGas * ethers.toBigInt(115)) / ethers.toBigInt(100); // 15% buffer
             const adjustedMaxPriorityFeePerGas = (fee.maxPriorityFeePerGas * ethers.toBigInt(115)) / ethers.toBigInt(100); // 15% buffer
@@ -62,7 +67,7 @@ export class TokenBase {
             return tx;
 
         } else if (fee.gasPrice) {
-
+            console.log('fee.gasPrice', fee.gasPrice)
             // Non-EIP-1559 (legacy transaction)
             const adjustedGasPrice = (fee.gasPrice * ethers.toBigInt(115)) / ethers.toBigInt(100); // 15% buffer
             tx.gasLimit = gas;

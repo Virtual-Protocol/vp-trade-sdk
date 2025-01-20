@@ -26,13 +26,14 @@ export class Prototype extends TokenBase {
         const quoteAmt = await this.getQuote(PurchaseType.BUY, amount, prototypeTokenAddress);
         console.log(`Estimated to receive of prototype token: ${prototypeTokenAddress} amount: ${quoteAmt}`);
 
+        const amountInWei = parseEther(amount);
         // check allowance
-        await this.checkTokenAllowance(amount);
+        await this.checkTokenAllowance(amountInWei.toString());
 
         // ABI-encoded `buy` function call
         const abi = bondingAbi;
         const iface = new ethers.Interface(abi);
-        let data = iface.encodeFunctionData(PurchaseType.BUY.toLowerCase(), [amount, prototypeTokenAddress]);
+        let data = iface.encodeFunctionData(PurchaseType.BUY.toLowerCase(), [amountInWei, prototypeTokenAddress]);
 
         // Append builderID if provided
         if (!builderID && builderID !== undefined) {
@@ -42,6 +43,7 @@ export class Prototype extends TokenBase {
 
         // Build the transaction
         let tx: ethers.TransactionRequest = {
+            from: this.wallet.address,
             to: this.bondingCurveAddr,
             data, // Encoded function call with builderID appended
             value: ethers.parseEther('0'), // Ether value to send with the transaction if required
@@ -64,13 +66,15 @@ export class Prototype extends TokenBase {
         const quoteAmt = await this.getQuote(PurchaseType.SELL, amount, prototypeTokenAddress);
         console.log('Estimated to receive amount of virtuals: ', quoteAmt);
 
+        const amountInWei = parseEther(amount);
+
         // check allowance
-        await this.checkTokenAllowance(amount, prototypeTokenAddress);
+        await this.checkTokenAllowance(amountInWei.toString(), prototypeTokenAddress);
 
         // ABI-encoded `sell` function call
         const abi = bondingAbi;
         const iface = new ethers.Interface(abi);
-        let data = iface.encodeFunctionData(PurchaseType.SELL.toLowerCase(), [amount, prototypeTokenAddress]);
+        let data = iface.encodeFunctionData(PurchaseType.SELL.toLowerCase(), [amountInWei, prototypeTokenAddress]);
 
         // Append builderID if provided
         if (!builderID && builderID !== undefined) {
@@ -80,6 +84,7 @@ export class Prototype extends TokenBase {
 
         // Build the transaction
         let tx: ethers.TransactionRequest = {
+            from: this.wallet.address,
             to: this.bondingCurveAddr,
             data, // Encoded function call with builderID appended
             value: ethers.parseEther('0'), // Ether value to send with the transaction if required
@@ -100,13 +105,15 @@ export class Prototype extends TokenBase {
     public async getQuote(side: PurchaseType, amount: string, prototypeTokenAddress: string): Promise<string> {
         const tax = 0.99;
 
+        console.log('getQuote')
+
         const frouterContract: ethers.Contract = new ethers.Contract(this.virtualRouter, frouterAbi, this.wallet);
         if (side === PurchaseType.BUY) {
             const amountAfterDeductingTax = +amount * tax;
-            return await frouterContract.getAmountsOut(parseEther(amountAfterDeductingTax.toString()), prototypeTokenAddress, this.virtualsTokenAddr);
+            return await frouterContract.getAmountsOut(prototypeTokenAddress, this.virtualsTokenAddr, parseEther(amountAfterDeductingTax.toString()));
         } else {
             // for sell prototype token to get virtuals, asset token use zero address.
-            return await frouterContract.getAmountsOut(parseEther(amount), prototypeTokenAddress, '0x0000000000000000000000000000000000000000');
+            return await frouterContract.getAmountsOut(prototypeTokenAddress, '0x0000000000000000000000000000000000000000', parseEther(amount.toString()));
         }
     }
 }
