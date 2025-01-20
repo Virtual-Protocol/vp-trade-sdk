@@ -9,11 +9,26 @@ interface TokenList {
 }
 
 interface Token {
-    name: string;
-    address: string;
-    tokenAddress: string;
-    daoAddress: string;
-    tbaAddress: string
+    id: number; // Represents the unique identifier of the token
+    name: string; // Name of the token
+    status: string; // Status of the token (e.g., "AVAILABLE")
+    tokenAddress: string; // The address of the token
+    description: string; // A brief description of the token
+    lpAddress: string; // Liquidity pool address for the token
+    symbol: string; // Symbol of the token (e.g., "LUNA")
+    holderCount: number; // Number of holders of the token
+    mcapInVirtual: number; // Market cap in virtual (e.g., in USD or other virtual currency)
+    socials: {
+        x: string; // Link to the token's social media (e.g., Twitter handle)
+        TWITTER: string; // Verified Twitter link
+        VERIFIED_LINKS: {
+            TWITTER: string; // Verified Twitter link
+        };
+    };
+    image: {
+        id: number; // ID of the image resource
+        url: string; // URL of the image (e.g., the token's logo)
+    };
 }
 
 interface VirtualApiConfig {
@@ -32,13 +47,14 @@ class VirtualApiManager {
         this.apiUrl = config.apiUrl;
     }
 
-    public async fetchVirtualTokensByAddress(tokenAddress: string): Promise<TokenList> {
+    public async fetchVirtualTokensByAddress(tokenAddress: string): Promise<Token> {
         try {
-            // Construct query parameters dynamically into a flat query object
-            const params: Record<string, string> = {
+            // Define the query parameters
+            const queryParams = {
                 'filters[status][$in][0]': 'AVAILABLE',
                 'filters[status][$in][1]': 'ACTIVATING',
                 'filters[status][$in][2]': 'UNDERGRAD',
+                'filters[priority][$ne]': '-1',
                 'filters[$or][0][name][$contains]': tokenAddress,
                 'filters[$or][1][symbol][$contains]': tokenAddress,
                 'filters[$or][2][tokenAddress][$contains]': tokenAddress,
@@ -50,9 +66,12 @@ class VirtualApiManager {
                 'pagination[pageSize]': '10',
             };
 
+            // Use URLSearchParams to build the query string
+            const queryString = new URLSearchParams(queryParams).toString();
+
             // Make the GET request to Virtuals API
-            const response = await needle('get', this.apiUrl, {
-                query: params, headers: { accept: 'application/json' }
+            const response = await needle('get', `${this.apiUrl}?${queryString}`, {
+                headers: { accept: 'application/json' }
             });
 
             if (response.statusCode !== 200) {
@@ -61,11 +80,27 @@ class VirtualApiManager {
 
             // Map the response data to match the TokenList structure
             return response.body.data.map((item: Token) => ({
-                name: item.name,
-                tokenAddress: item.tokenAddress,
-                daoAddress: item.daoAddress,
-                tbaAddress: item.tbaAddress,
-            }));
+                id: item.id ?? '',
+                name: item.name ?? '',
+                status: item.status ?? '',
+                tokenAddress: item.tokenAddress ?? '',
+                description: item.description ?? '',
+                lpAddress: item.lpAddress ?? '',
+                symbol: item.symbol ?? '',
+                holderCount: item.holderCount ?? '',
+                mcapInVirtual: item.mcapInVirtual ?? '',
+                socials: {
+                    x: item.socials?.x ?? '',
+                    TWITTER: item.socials?.TWITTER ?? '',
+                    VERIFIED_LINKS: {
+                        TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? '', 
+                    },
+                },
+                image: {
+                    id: item.image?.id ?? '',
+                    url: item.image?.url ?? '',
+                }
+            }))[0];
 
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred while fetching token lists.';
@@ -85,19 +120,9 @@ class VirtualApiManager {
     public async fetchVirtualTokenLists(type: string, page: number, pageSize: number): Promise<TokenList> {
         try {
 
-            // Define status based on the type
-            let virtualStatus: string[] = [];
-            if (type === TokenType.PROTOTYPE) {
-                virtualStatus = ['UNDERGRAD']; // Single status for prototype
-            } else if (type === TokenType.SENTIENT) {
-                virtualStatus = ['AVAILABLE', 'ACTIVATING']; // Two statuses for sentinent
-            } else {
-                throw new Error(`Invalid token type provided: ${type}. Expected 'PROTOTYPE' or 'SENTIENT'.`);
-            }
-
-            // Construct query parameters dynamically into a flat query object
-            const params: Record<string, string> = {
-                'filters[status][$in][0]': virtualStatus[0],
+            let queryParams = {
+                'filters[status][$in][0]': '',
+                'filters[status][$in][1]': '',
                 'filters[priority][$ne]': '-1',
                 'sort[0]': 'totalValueLocked:desc',
                 'sort[1]': 'createdAt:desc',
@@ -106,16 +131,20 @@ class VirtualApiManager {
                 'pagination[pageSize]': pageSize.toString(),
             };
 
-            // If there are more than 1 statuses for the given type, append them
-            if (virtualStatus.length > 1) {
-                virtualStatus.forEach((status, index) => {
-                    params[`filters[status][$in][${index}]`] = status;
-                });
+            // Set the status condition based on tokenAddress
+            if (type === TokenType.SENTIENT) {
+                queryParams['filters[status][$in][0]'] = 'AVAILABLE';
+                queryParams['filters[status][$in][1]'] = 'ACTIVATING';
+            } else {
+                queryParams['filters[status][$in][0]'] = 'UNDERGRAD';
             }
 
+            // Use URLSearchParams to build the query string
+            const queryString = new URLSearchParams(queryParams).toString();
+
             // Make the GET request to Virtuals API
-            const response = await needle('get', this.apiUrl, {
-                query: params, headers: { accept: 'application/json' }
+            const response = await needle('get', `${this.apiUrl}?${queryString}`, {
+                headers: { accept: 'application/json' }
             });
 
             if (response.statusCode !== 200) {
@@ -124,10 +153,26 @@ class VirtualApiManager {
 
             // Map the response data to match the TokenList structure
             return response.body.data.map((item: Token) => ({
-                name: item.name,
-                tokenAddress: item.tokenAddress,
-                daoAddress: item.daoAddress,
-                tbaAddress: item.tbaAddress,
+                id: item.id ?? '',
+                name: item.name ?? '',
+                status: item.status ?? '',
+                tokenAddress: item.tokenAddress ?? '',
+                description: item.description ?? '',
+                lpAddress: item.lpAddress ?? '',
+                symbol: item.symbol ?? '',
+                holderCount: item.holderCount ?? '',
+                mcapInVirtual: item.mcapInVirtual ?? '',
+                socials: {
+                    x: item.socials?.x ?? '',
+                    TWITTER: item.socials?.TWITTER ?? '',
+                    VERIFIED_LINKS: {
+                        TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? '', 
+                    },
+                },
+                image: {
+                    id: item.image?.id ?? '',
+                    url: item.image?.url ?? '',
+                }
             }));
 
         } catch (error: unknown) {

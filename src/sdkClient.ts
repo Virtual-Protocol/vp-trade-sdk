@@ -18,11 +18,26 @@ interface TokenList {
 }
 
 interface Token {
-    name: string;
-    address: string;
-    tokenAddress: string;
-    daoAddress: string;
-    tbaAddress: string
+    id: number; // Represents the unique identifier of the token
+    name: string; // Name of the token
+    status: string; // Status of the token (e.g., "AVAILABLE")
+    tokenAddress: string; // The address of the token
+    description: string; // A brief description of the token
+    lpAddress: string; // Liquidity pool address for the token
+    symbol: string; // Symbol of the token (e.g., "LUNA")
+    holderCount: number; // Number of holders of the token
+    mcapInVirtual: number; // Market cap in virtual (e.g., in USD or other virtual currency)
+    socials: {
+        x: string; // Link to the token's social media (e.g., Twitter handle)
+        TWITTER: string; // Verified Twitter link
+        VERIFIED_LINKS: {
+            TWITTER: string; // Verified Twitter link
+        };
+    };
+    image: {
+        id: number; // ID of the image resource
+        url: string; // URL of the image (e.g., the token's logo)
+    };
 }
 
 export class SDKClient {
@@ -169,7 +184,7 @@ export class SDKClient {
      * @param tokenAddress Token's address
      * @returns Token list data
      */
-    public async fetchToken(tokenAddress: string): Promise<TokenList> {
+    public async fetchToken(tokenAddress: string): Promise<Token> {
         return await this.virtualApiManager.fetchVirtualTokensByAddress(tokenAddress);
     }
 
