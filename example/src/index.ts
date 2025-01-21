@@ -1,6 +1,5 @@
 import { SDKClient } from 'vp-trade-sdk/sdkClient';
 import dotenv from 'dotenv';
-import { TransactionReceipt } from 'ethers';
 dotenv.config();
 
 const config = {
@@ -27,20 +26,20 @@ async function main() {
         // const receipt = await sdkClient.swapInSentientTokens(GAMESentienttTokenAddress, amount);
         // console.log('Sentient txn receipt: ', receipt); 
 
-        const GAMESentienttTokenAddress = '0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3';
-        const amount = '0.01';
-        const receipt = await sdkClient.swapOutSentientTokens(GAMESentienttTokenAddress, amount);
-        console.log('Sentient Swap Out txn receipt: ', receipt); 
+        // const GAMESentienttTokenAddress = '0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3';
+        // const amount = '0.15';
+        // const receipt = await sdkClient.swapOutSentientTokens(GAMESentienttTokenAddress, amount);
+        // console.log('Sentient Swap Out txn receipt: ', receipt); 
 
-        // const TRUMPAGENTPrototype = '0x069E372EE0164c4D50F6F789f07fDE286DdB524C';
+        const TRUMPAGENTPrototype = '0x069E372EE0164c4D50F6F789f07fDE286DdB524C';
         // const amount = '0.01';
         // const receipt = await sdkClient.buyPrototypeTokens(TRUMPAGENTPrototype, amount);
         // console.log('Buy Prototype txn receipt: ', receipt); 
 
-        // const receipt = await sdkClient.sellPrototypeTokens(TRUMPAGENTPrototype, '1649.997277');
-        // console.log('Sell Prototype txn receipt: ', receipt); 
+        const receipt = await sdkClient.sellPrototypeTokens(TRUMPAGENTPrototype, '1649.997277');
+        console.log('Sell Prototype txn receipt: ', receipt); 
 
-        // console.log('Fetch by address:', await sdkClient.fetchToken('0x5E8639baE1009E099d566007Bc1C4A6B55F7DB8e'));
+        console.log('Fetch by address:', await sdkClient.fetchToken('0x5E8639baE1009E099d566007Bc1C4A6B55F7DB8e'));
 
     } catch (error) {
         // Handle any errors

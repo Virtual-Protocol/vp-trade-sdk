@@ -37,15 +37,15 @@ export class Sentient extends TokenBase {
         //     (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction) / ethers.toBigInt(10000);
 
         // Default slippage percentage to 5%
-        const userSlippagePercentage = slippage ? slippage : 5; // Use provided slippage or default to 5%
+        const userSlippagePercentage = slippage ? slippage : 50; // Use provided slippage or default to 5%
         console.log('userSlippagePercentage:', userSlippagePercentage)
 
         // Calculate amountOutMinInWei with the user-defined slippage
-        const slippageFraction = ethers.toBigInt(userSlippagePercentage) / ethers.toBigInt(100); // Convert percentage to fraction
+        const slippageFraction = (ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(10000)) / ethers.toBigInt(10000); // Convert percentage to fraction
         console.log('ethers.toBigInt(userSlippagePercentage):', ethers.toBigInt(userSlippagePercentage))
         console.log('ethers.toBigInt(100):', ethers.toBigInt(100))
         console.log('slippageFraction:', slippageFraction)
-        const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) - (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction);
+        const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) - (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction) / ethers.toBigInt(100);
         console.log('ethers.toBigInt(amountsOutInWei[1]):', ethers.toBigInt(amountsOutInWei[1]))
         console.log('(ethers.toBigInt(amountsOutInWei[1]) * slippageFraction):', (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction))
 

@@ -42,13 +42,14 @@ export class TokenBase {
 
     protected async estimateGas(tx: ethers.TransactionRequest): Promise<ethers.TransactionRequest> {
         const provider = this.wallet.provider;
-
+        console.log('sooka')
         if (!provider) {
             throw new Error('No provider found for the connected wallet');
         }
-
+        console.log('1')
+        console.log(tx)
         let gas = await provider.estimateGas(tx)
-
+        console.log('2')
         // Info: Estimate gas top up 15%.
         gas = (gas * ethers.toBigInt(115)) / ethers.toBigInt(100);
         console.log('gas', gas)
