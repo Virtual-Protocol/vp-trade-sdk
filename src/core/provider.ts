@@ -21,8 +21,28 @@ export class ProviderManager {
         }
 
         // Initialize the provider
-        // this.provider = new ethers.JsonRpcProvider(`${config.rpcUrl}?apiKey=${config.apiKey}`);
-        this.provider = new ethers.AlchemyProvider('base', config.apiKey);
+        // Determine the provider type based on the RPC URL
+        let providerType: 'alchemy' | 'ankr' | 'custom' = 'custom';
+        if (config.rpcUrl.includes('alchemy.com')) {
+            providerType = 'alchemy';
+        } else if (config.rpcUrl.includes('ankr.com')) {
+            providerType = 'ankr';
+        }
+
+        console.log(`Detected provider: ${providerType}`);
+
+        // Initialize the provider based on the detected type
+        switch (providerType) {
+            case 'alchemy':
+                this.provider = new ethers.AlchemyProvider('base', config.apiKey);
+                break;
+            case 'ankr':
+                this.provider = new ethers.JsonRpcProvider(config.rpcUrl);
+                break;
+            default:
+                this.provider = new ethers.JsonRpcProvider(config.rpcUrl);
+                break;
+        }
     }
 
     public static getInstance(config: ProviderConfig): ProviderManager {
