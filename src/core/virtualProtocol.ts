@@ -120,7 +120,7 @@ class VirtualApiManager {
     public async fetchVirtualTokenLists(type: string, page: number, pageSize: number): Promise<TokenList> {
         try {
 
-            let queryParams = {
+            const queryParams = {
                 'filters[status][$in][0]': '',
                 'filters[status][$in][1]': '',
                 'filters[priority][$ne]': '-1',
