@@ -96,12 +96,12 @@ export class SDKClient {
      * @param amount Amount to swap
      * @param builderID 
      */
-    public async swapInSentientTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+    public async buySentientTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
         const from = CONFIG.VIRTUALS_TOKEN_ADDR;
         const to = tokenAddress;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendSentientTransaction(from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendSentientTransaction(PurchaseType.BUY, from, to, amount, builderID);
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
@@ -113,12 +113,12 @@ export class SDKClient {
      * @param amount Amount to swap
      * @param builderID 
      */
-    public async swapOutSentientTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+    public async sellSentientTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
         const from = tokenAddress;
         const to = CONFIG.VIRTUALS_TOKEN_ADDR;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendSentientTransaction(from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendSentientTransaction(PurchaseType.SELL, from, to, amount, builderID);
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);

@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { uniswapV2routerAbi } from '../../assets/uniswapV2router';
 import { TokenBase } from './tokenbase'
+import { PurchaseType } from '../../constant/common';
 
 export class Sentient extends TokenBase {
     private uniswapV2routerAddr: string;
@@ -10,7 +11,7 @@ export class Sentient extends TokenBase {
         this.uniswapV2routerAddr = uniswapV2routerAddr;
     }
 
-    public async swapSentientToken(fromTokenAddress: string, toTokenAddress: string, amount: string, builderID?: number, slippage?: number): Promise<ethers.TransactionRequest> {
+    public async swapSentientToken(purchaseType: PurchaseType, fromTokenAddress: string, toTokenAddress: string, amount: string, builderID?: number, slippage?: number): Promise<ethers.TransactionRequest> {
         const provider = this.wallet.provider;
         if (!provider) {
             throw new Error('No provider found for the connected wallet');
@@ -23,41 +24,18 @@ export class Sentient extends TokenBase {
         const path = [fromTokenAddress, toTokenAddress]; // Token A -> Token B
         const amountsOutInWei = await uniswapV2routerContract.getAmountsOut(amountInInWei, path);
 
-        // // Default slippage percentage to 5%
-        // let userSlippagePercentage = 5;
-        // if (slippage !== undefined) {
-        //     userSlippagePercentage = slippage; // Replace with user input
-        // }
-
-        // // Convert slippage percentage to a fraction
-        // const slippageFraction = ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(100);
-
-        // // Calculate amountOutMinInWei with the user-defined slippage
-        // const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) -
-        //     (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction) / ethers.toBigInt(10000);
-
         // Default slippage percentage to 5%
-        const userSlippagePercentage = slippage ? slippage : 50; // Use provided slippage or default to 5%
-        console.log('userSlippagePercentage:', userSlippagePercentage)
+        const userSlippagePercentage = slippage ? slippage : 5; // Use provided slippage or default to 5%
 
         // Calculate amountOutMinInWei with the user-defined slippage
         const slippageFraction = (ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(10000)) / ethers.toBigInt(10000); // Convert percentage to fraction
-        console.log('ethers.toBigInt(userSlippagePercentage):', ethers.toBigInt(userSlippagePercentage))
-        console.log('ethers.toBigInt(100):', ethers.toBigInt(100))
-        console.log('slippageFraction:', slippageFraction)
         const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) - (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction) / ethers.toBigInt(100);
-        console.log('ethers.toBigInt(amountsOutInWei[1]):', ethers.toBigInt(amountsOutInWei[1]))
-        console.log('(ethers.toBigInt(amountsOutInWei[1]) * slippageFraction):', (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction))
 
-        console.log(`Minimum amount out with ${userSlippagePercentage}% slippage:`, amountOutMinInWei.toString());
-
+        console.log('amountOutInWei: ', amountsOutInWei.toString());
         console.log('amountOutMinInWei: ', amountOutMinInWei.toString());
-        console.log('amountsOutInWei', amountsOutInWei.toString());
-        console.log('amountInInWei', amountInInWei.toString());
-        console.log('path', path.toString());
 
-
-        await this.checkTokenAllowance(amountInInWei.toString(), fromTokenAddress);
+        // Notes: removed, this should be responsibility on builder.
+        // await this.checkTokenAllowance(amountInInWei.toString(), fromTokenAddress);
 
         // Execute the swap
         const to = this.wallet.address;
@@ -65,7 +43,15 @@ export class Sentient extends TokenBase {
 
         // ABI-encoded `swap` function call
         const iface = new ethers.Interface(uniswapV2routerAbi);
-        let data = iface.encodeFunctionData('swapExactTokensForTokens', [amountInInWei, amountOutMinInWei, path, to, deadline]);
+
+        let data;
+        if (purchaseType === PurchaseType.BUY) {
+            data = iface.encodeFunctionData('swapExactTokensForTokens', [amountInInWei, amountOutMinInWei, path, to, deadline]);
+        } else {
+
+            // upon selling sentient tokens there is fees imposed.
+            data = iface.encodeFunctionData('swapExactTokensForTokensSupportingFeeOnTransferTokens', [amountInInWei, amountOutMinInWei, path, to, deadline]);
+        }
 
         // Append builderID if provided
         if (!builderID && builderID !== undefined) {

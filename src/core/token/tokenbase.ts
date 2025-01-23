@@ -8,10 +8,46 @@ export class TokenBase {
         this.wallet = wallet;
     }
 
+    public async checkAllowance(amount: string, tokenAddress: string, routerAddress: string): Promise<boolean> {
+        const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
+        const amountInWei = ethers.parseEther(amount);
+
+        // Check wallet balance first.
+        const tokenBalance: BigNumberish = await tokenContract.balanceOf(this.wallet.address);
+        console.log('tokenBalance:', tokenBalance)
+        if (!tokenBalance || BigInt(tokenBalance) < BigInt(amountInWei)) {
+            throw new Error(`Connected wallet doesn't have enough balance: ${tokenBalance}`);
+        }
+
+        // Get allowance.
+        const allowance: BigNumberish = await tokenContract.allowance(this.wallet.address, routerAddress);
+
+        if (!allowance || BigInt(allowance) < BigInt(amountInWei)) {
+
+            return false;
+        }
+        return true;
+    }
+
+    public async approveAllowance(amount: string, tokenAddress: string, routerAddress: string): Promise<string> {
+        const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
+        const amountInWei = ethers.parseEther(amount);
+
+        try {
+            // Approve allowance to the router address
+            const tx: ContractTransactionReceipt = await tokenContract.approve(routerAddress, amountInWei);
+
+            console.log(`Allowance has been approved: ${tx.hash}, amount: ${amountInWei}`);
+            return tx.hash
+        } catch (error) {
+            throw new Error(`Failed to approve allowance: ${error}`);
+        }
+    }
+
     protected async checkAllowanceAndApprove(amountInWei: string, tokenAddress: string, routerAddress: string) {
         const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
 
-        console.log('amountInWei',amountInWei);
+        console.log('amountInWei', amountInWei);
 
         // Check wallet balance first.
         const tokenBalance: BigNumberish = await tokenContract.balanceOf(this.wallet.address);

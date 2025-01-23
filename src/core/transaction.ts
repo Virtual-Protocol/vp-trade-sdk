@@ -70,7 +70,7 @@ export class TransactionManager {
      * @param builderID - Optional ID used for transaction metadata, relevant for specific transaction logic.
      * @returns A promise that resolves to the transaction response (`ethers.TransactionResponse`).
      */
-    public async sendSentientTransaction(fromAddress: string, toAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionResponse> {
+    public async sendSentientTransaction(purchaseType: PurchaseType, fromAddress: string, toAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionResponse> {
         try {
 
             // Validate provider
@@ -80,7 +80,7 @@ export class TransactionManager {
             }
 
             // Step 1: Build request and return TransactionRequest
-            const txnRequest = await this.sentient.swapSentientToken(fromAddress, toAddress, amount, builderID);
+            const txnRequest = await this.sentient.swapSentientToken(purchaseType, fromAddress, toAddress, amount, builderID);
 
             // Step 2: call createTransaction with the request
             const signedTx = await this.createTransaction(txnRequest);

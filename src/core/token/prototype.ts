@@ -27,8 +27,10 @@ export class Prototype extends TokenBase {
         console.log(`Estimated to receive of prototype token: ${prototypeTokenAddress} amount: ${quoteAmt}`);
 
         const amountInWei = parseEther(amount);
+
+        // Notes: removed, this should be responsibility on builder.
         // check allowance
-        await this.checkTokenAllowance(amountInWei.toString());
+        // await this.checkTokenAllowance(amountInWei.toString());
 
         // ABI-encoded `buy` function call
         const abi = bondingAbi;
@@ -68,8 +70,9 @@ export class Prototype extends TokenBase {
 
         const amountInWei = parseEther(amount);
 
+        // Notes: removed, this should be responsibility on builder.
         // check allowance
-        await this.checkTokenAllowance(amountInWei.toString(), prototypeTokenAddress);
+        // await this.checkTokenAllowance(amountInWei.toString(), prototypeTokenAddress);
 
         // ABI-encoded `sell` function call
         const abi = bondingAbi;
