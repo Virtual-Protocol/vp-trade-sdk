@@ -8,7 +8,7 @@ export class TokenBase {
         this.wallet = wallet;
     }
 
-    public async checkAllowance(amount: string, tokenAddress: string, routerAddress: string): Promise<boolean> {
+    protected async checkAllowance(amount: string, tokenAddress: string, routerAddress: string): Promise<boolean> {
         const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
         const amountInWei = ethers.parseEther(amount);
 
@@ -23,13 +23,12 @@ export class TokenBase {
         const allowance: BigNumberish = await tokenContract.allowance(this.wallet.address, routerAddress);
 
         if (!allowance || BigInt(allowance) < BigInt(amountInWei)) {
-
             return false;
         }
         return true;
     }
 
-    public async approveAllowance(amount: string, tokenAddress: string, routerAddress: string): Promise<string> {
+    protected async approveAllowance(amount: string, tokenAddress: string, routerAddress: string): Promise<string> {
         const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
         const amountInWei = ethers.parseEther(amount);
 
@@ -44,37 +43,37 @@ export class TokenBase {
         }
     }
 
-    protected async checkAllowanceAndApprove(amountInWei: string, tokenAddress: string, routerAddress: string) {
-        const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
+    // protected async checkAllowanceAndApprove(amountInWei: string, tokenAddress: string, routerAddress: string) {
+    //     const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
 
-        console.log('amountInWei', amountInWei);
+    //     console.log('amountInWei', amountInWei);
 
-        // Check wallet balance first.
-        const tokenBalance: BigNumberish = await tokenContract.balanceOf(this.wallet.address);
-        console.log('tokenBalance:', tokenBalance)
-        if (!tokenBalance || BigInt(tokenBalance) < BigInt(amountInWei)) {
-            throw new Error(`Connected wallet doesn't have enough balance: ${tokenBalance}`);
-        }
+    //     // Check wallet balance first.
+    //     const tokenBalance: BigNumberish = await tokenContract.balanceOf(this.wallet.address);
+    //     console.log('tokenBalance:', tokenBalance)
+    //     if (!tokenBalance || BigInt(tokenBalance) < BigInt(amountInWei)) {
+    //         throw new Error(`Connected wallet doesn't have enough balance: ${tokenBalance}`);
+    //     }
 
-        // Get allowance.
-        const allowance: BigNumberish = await tokenContract.allowance(this.wallet.address, routerAddress);
+    //     // Get allowance.
+    //     const allowance: BigNumberish = await tokenContract.allowance(this.wallet.address, routerAddress);
 
-        // Send an approve allowance tx if allowance is less than amount.
-        if (!allowance || BigInt(allowance) < BigInt(amountInWei)) {
-            try {
-                // Approve allowance to the router address
-                const tx: ContractTransactionReceipt = await tokenContract.approve(routerAddress, amountInWei);
+    //     // Send an approve allowance tx if allowance is less than amount.
+    //     if (!allowance || BigInt(allowance) < BigInt(amountInWei)) {
+    //         try {
+    //             // Approve allowance to the router address
+    //             const tx: ContractTransactionReceipt = await tokenContract.approve(routerAddress, amountInWei);
 
-                console.log(`Allowance has been approved: ${tx.hash}, amount: ${amountInWei}`);
-                return;
-            } catch (error) {
-                throw new Error(`Failed to approve allowance: ${error}`);
-            }
-        }
+    //             console.log(`Allowance has been approved: ${tx.hash}, amount: ${amountInWei}`);
+    //             return;
+    //         } catch (error) {
+    //             throw new Error(`Failed to approve allowance: ${error}`);
+    //         }
+    //     }
 
-        console.log(`Connected wallet has enough allowance amount: ${allowance}`);
-        return;
-    }
+    //     console.log(`Connected wallet has enough allowance amount: ${allowance}`);
+    //     return;
+    // }
 
     protected async estimateGas(tx: ethers.TransactionRequest): Promise<ethers.TransactionRequest> {
         const provider = this.wallet.provider;

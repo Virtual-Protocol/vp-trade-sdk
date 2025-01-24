@@ -3,6 +3,7 @@ import { bondingAbi } from '../../assets/bonding';
 import { frouterAbi } from '../../assets/frouter';
 import { PurchaseType } from '../../constant';
 import { TokenBase } from './tokenbase'
+import { Option } from '../../sdkClient';
 
 export class Prototype extends TokenBase {
     private virtualsTokenAddr: string;
@@ -16,7 +17,7 @@ export class Prototype extends TokenBase {
         this.bondingCurveAddr = bondingCurveAddr;
     }
 
-    public async buildBuyPrototypeTokenRequest(prototypeTokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionRequest> {
+    public async buildBuyPrototypeTokenRequest(prototypeTokenAddress: string, amount: string, option?: Option): Promise<ethers.TransactionRequest> {
         const provider = this.wallet.provider;
         if (!provider) {
             throw new Error('No provider found for the connected wallet');
@@ -38,8 +39,8 @@ export class Prototype extends TokenBase {
         let data = iface.encodeFunctionData(PurchaseType.BUY.toLowerCase(), [amountInWei, prototypeTokenAddress]);
 
         // Append builderID if provided
-        if (!builderID && builderID !== undefined) {
-            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(builderID), 2); // Encode builderID as 2-byte hex
+        if (option && !option.builderID && option.builderID !== undefined) {
+            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(option.builderID), 2); // Encode builderID as 2-byte hex
             data += builderIDHex.slice(2); // Remove '0x' from builderIDHex and append
         }
 
@@ -58,7 +59,7 @@ export class Prototype extends TokenBase {
 
     }
 
-    public async buildSellPrototypeTokenRequest(prototypeTokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionRequest> {
+    public async buildSellPrototypeTokenRequest(prototypeTokenAddress: string, amount: string, option?: Option): Promise<ethers.TransactionRequest> {
         const provider = this.wallet.provider;
         if (!provider) {
             throw new Error('No provider found for the connected wallet');
@@ -80,8 +81,8 @@ export class Prototype extends TokenBase {
         let data = iface.encodeFunctionData(PurchaseType.SELL.toLowerCase(), [amountInWei, prototypeTokenAddress]);
 
         // Append builderID if provided
-        if (!builderID && builderID !== undefined) {
-            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(builderID), 2); // Encode builderID as 2-byte hex
+        if (option && !option.builderID && option.builderID !== undefined) {
+            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(option.builderID), 2); // Encode builderID as 2-byte hex
             data += builderIDHex.slice(2); // Remove '0x' from builderIDHex and append
         }
 
@@ -99,10 +100,16 @@ export class Prototype extends TokenBase {
         return tx;
     }
 
-    private async checkTokenAllowance(amountInWei: string, prototypeTokenAddress?: string) {
+    public async checkTokenAllowance(amountInWei: string, prototypeTokenAddress?: string) {
         // Use the provided prototype token address or fallback to the default virtuals token address.
         const tokenAddress = prototypeTokenAddress ? prototypeTokenAddress : this.virtualsTokenAddr;
-        await this.checkAllowanceAndApprove(amountInWei, tokenAddress, this.virtualRouter);
+        return await this.checkAllowance(amountInWei, tokenAddress, this.virtualRouter);
+    }
+
+    public async approveTokenAllowance(amountInWei: string, prototypeTokenAddress?: string) {
+        // Use the provided prototype token address or fallback to the default virtuals token address.
+        const tokenAddress = prototypeTokenAddress ? prototypeTokenAddress : this.virtualsTokenAddr;
+        return await this.approveAllowance(amountInWei, tokenAddress, this.virtualRouter);
     }
 
     public async getQuote(side: PurchaseType, amount: string, prototypeTokenAddress: string): Promise<string> {

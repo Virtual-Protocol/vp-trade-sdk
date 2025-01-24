@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { PurchaseType } from '../constant';
 import { Prototype, Sentient } from './token';
+import { Option } from '../sdkClient';
 
 export class TransactionManager {
     private wallet: ethers.Wallet;
@@ -24,10 +25,10 @@ export class TransactionManager {
      * @param fromAddress - Address of the token sender (for sell operations).
      * @param toAddress - Address of the recipient (for buy operations).
      * @param amount - Amount of the token to be bought or sold, represented as a string.
-     * @param builderID - Optional ID used for transaction metadata, relevant for specific transaction logic.
+     * @param option - Optional parameters for the transaction.
      * @returns A promise that resolves to the transaction response (`ethers.TransactionResponse`).
      */
-    public async sendPrototypeTransaction(purchaseType: PurchaseType, fromAddress: string, toAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionResponse> {
+    public async sendPrototypeTransaction(purchaseType: PurchaseType, fromAddress: string, toAddress: string, amount: string, option?: Option): Promise<ethers.TransactionResponse> {
         try {
 
             // Validate provider
@@ -39,9 +40,9 @@ export class TransactionManager {
             // Step 1: Build request and return TransactionRequest
             let txnRequest: ethers.TransactionRequest;
             if (purchaseType == PurchaseType.BUY) {
-                txnRequest = await this.prototype.buildBuyPrototypeTokenRequest(toAddress, amount, builderID);
+                txnRequest = await this.prototype.buildBuyPrototypeTokenRequest(toAddress, amount, option);
             } else if (purchaseType == PurchaseType.SELL) {
-                txnRequest = await this.prototype.buildSellPrototypeTokenRequest(fromAddress, amount, builderID);
+                txnRequest = await this.prototype.buildSellPrototypeTokenRequest(fromAddress, amount, option);
             } else {
                 throw new Error(`Failed to send transaction, unknown tokenType : ${purchaseType}`);
             }
@@ -56,6 +57,23 @@ export class TransactionManager {
         }
     }
 
+    
+    public async checkPrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
+        try {
+            return await this.prototype.checkTokenAllowance(amountInWei, fromTokenAddress);
+        } catch (error) {
+            throw new Error(`Failed to check prototype allowance: ${error}`);
+        }
+    }
+
+    public async approvePrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<string> {
+        try {
+            return await this.prototype.approveTokenAllowance(amountInWei, fromTokenAddress);
+        } catch (error) {
+            throw new Error(`Failed to approve prototype allowance: ${error}`);
+        }
+    }
+
     /**
      * Sends a transaction for sentient tokens (either purchase or sale).
      * 
@@ -63,14 +81,13 @@ export class TransactionManager {
      * signs the transaction, and broadcasts it to the network. The `purchaseType` determines
      * whether the transaction is a buy or a sell operation.  
      * 
-     * @param purchaseType - Type of purchase: either `PurchaseType.BUY` or `PurchaseType.SELL`.
      * @param fromAddress - Address of the token sender (for sell operations).
      * @param toAddress - Address of the recipient (for buy operations).
      * @param amount - Amount of the token to be bought or sold, represented as a string.
-     * @param builderID - Optional ID used for transaction metadata, relevant for specific transaction logic.
+     * @param option - Optional parameters for the transaction.
      * @returns A promise that resolves to the transaction response (`ethers.TransactionResponse`).
      */
-    public async sendSentientTransaction(purchaseType: PurchaseType, fromAddress: string, toAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionResponse> {
+    public async sendSentientTransaction(fromAddress: string, toAddress: string, amount: string, option?: Option): Promise<ethers.TransactionResponse> {
         try {
 
             // Validate provider
@@ -80,7 +97,7 @@ export class TransactionManager {
             }
 
             // Step 1: Build request and return TransactionRequest
-            const txnRequest = await this.sentient.swapSentientToken(purchaseType, fromAddress, toAddress, amount, builderID);
+            const txnRequest = await this.sentient.swapSentientToken(fromAddress, toAddress, amount, option);
 
             // Step 2: call createTransaction with the request
             const signedTx = await this.createTransaction(txnRequest);
@@ -89,6 +106,22 @@ export class TransactionManager {
             return await provider.broadcastTransaction(signedTx);
         } catch (error) {
             throw new Error(`Failed to send transaction: ${error}`);
+        }
+    }
+
+    public async checkSentientAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
+        try {
+            return await this.sentient.checkTokenAllowance(amountInWei, fromTokenAddress);
+        } catch (error) {
+            throw new Error(`Failed to check sentient allowance: ${error}`);
+        }
+    }
+
+    public async approveSentientAllowance(amountInWei: string, fromTokenAddress: string): Promise<string> {
+        try {
+            return await this.sentient.approveTokenAllowance(amountInWei, fromTokenAddress);
+        } catch (error) {
+            throw new Error(`Failed to approve sentient allowance: ${error}`);
         }
     }
 

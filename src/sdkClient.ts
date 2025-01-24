@@ -17,6 +17,11 @@ interface TokenList {
     tokens: Token[];
 }
 
+export interface Option {
+    builderID?: number;
+    slippage?: number;
+}
+
 interface Token {
     id: number; // Represents the unique identifier of the token
     name: string; // Name of the token
@@ -101,7 +106,7 @@ export class SDKClient {
         const to = tokenAddress;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendSentientTransaction(PurchaseType.BUY, from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendSentientTransaction(from, to, amount, { builderID });
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
@@ -118,7 +123,7 @@ export class SDKClient {
         const to = CONFIG.VIRTUALS_TOKEN_ADDR;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendSentientTransaction(PurchaseType.SELL, from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendSentientTransaction(from, to, amount, { builderID });
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
@@ -130,12 +135,12 @@ export class SDKClient {
      * @param amount Amount to buy
      * @param builderID 
      */
-    public async buyPrototypeTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+    public async buyPrototypeTokens(tokenAddress: string, amount: string, option?: Option): Promise<ethers.TransactionReceipt> {
         const from = CONFIG.VIRTUALS_TOKEN_ADDR;
         const to = tokenAddress;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.BUY, from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.BUY, from, to, amount, option);
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
@@ -148,15 +153,56 @@ export class SDKClient {
      * @param builderID 
      * @returns 
      */
-    public async sellPrototypeTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
+    public async sellPrototypeTokens(tokenAddress: string, amount: string, option?: Option): Promise<ethers.TransactionReceipt> {
         const from = tokenAddress;
         const to = CONFIG.VIRTUALS_TOKEN_ADDR;
 
         // send transaction
-        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.SELL, from, to, amount, builderID);
+        const txResponse = await this.transactionManager.sendPrototypeTransaction(PurchaseType.SELL, from, to, amount, option);
 
         // return transaction receipt
         return this.obtainReceipt(txResponse);
+    }
+
+    /**
+     * Check Sentient Token Allowance
+     * @param amountInWei 
+     * @param fromTokenAddress 
+     * @returns 
+     */
+    public async checkSentientAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
+        return await this.transactionManager.checkSentientAllowance(amountInWei, fromTokenAddress);
+    }
+
+    /**
+     * Check Sentient Token Allowance
+     * @param amountInWei 
+     * @param fromTokenAddress 
+     * @returns 
+     */
+    public async approveSentientAllowance(amountInWei: string, fromTokenAddress: string): Promise<string> {
+        return await this.transactionManager.approveSentientAllowance(amountInWei, fromTokenAddress);
+    }
+
+
+    /**
+ * Check Prototype Token Allowance
+ * @param amountInWei 
+ * @param fromTokenAddress 
+ * @returns 
+ */
+    public async checkPrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
+        return await this.transactionManager.checkPrototypeAllowance(amountInWei, fromTokenAddress);
+    }
+
+    /**
+     * Check Prototype Token Allowance
+     * @param amountInWei 
+     * @param fromTokenAddress 
+     * @returns 
+     */
+    public async approvePrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<string> {
+        return await this.transactionManager.approvePrototypeAllowance(amountInWei, fromTokenAddress);
     }
 
     /**

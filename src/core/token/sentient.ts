@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { uniswapV2routerAbi } from '../../assets/uniswapV2router';
 import { TokenBase } from './tokenbase'
-import { PurchaseType } from '../../constant/common';
+import { Option } from '../../sdkClient';
 
 export class Sentient extends TokenBase {
     private uniswapV2routerAddr: string;
@@ -11,7 +11,7 @@ export class Sentient extends TokenBase {
         this.uniswapV2routerAddr = uniswapV2routerAddr;
     }
 
-    public async swapSentientToken(purchaseType: PurchaseType, fromTokenAddress: string, toTokenAddress: string, amount: string, builderID?: number, slippage?: number): Promise<ethers.TransactionRequest> {
+    public async swapSentientToken(fromTokenAddress: string, toTokenAddress: string, amount: string, option?: Option): Promise<ethers.TransactionRequest> {
         const provider = this.wallet.provider;
         if (!provider) {
             throw new Error('No provider found for the connected wallet');
@@ -25,7 +25,7 @@ export class Sentient extends TokenBase {
         const amountsOutInWei = await uniswapV2routerContract.getAmountsOut(amountInInWei, path);
 
         // Default slippage percentage to 5%
-        const userSlippagePercentage = slippage ? slippage : 5; // Use provided slippage or default to 5%
+        const userSlippagePercentage = option && option.slippage ? option.slippage : 5; // Use provided slippage or default to 5%
 
         // Calculate amountOutMinInWei with the user-defined slippage
         const slippageFraction = (ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(10000)) / ethers.toBigInt(10000); // Convert percentage to fraction
@@ -44,18 +44,12 @@ export class Sentient extends TokenBase {
         // ABI-encoded `swap` function call
         const iface = new ethers.Interface(uniswapV2routerAbi);
 
-        let data;
-        if (purchaseType === PurchaseType.BUY) {
-            data = iface.encodeFunctionData('swapExactTokensForTokens', [amountInInWei, amountOutMinInWei, path, to, deadline]);
-        } else {
-
-            // upon selling sentient tokens there is fees imposed.
-            data = iface.encodeFunctionData('swapExactTokensForTokensSupportingFeeOnTransferTokens', [amountInInWei, amountOutMinInWei, path, to, deadline]);
-        }
+        // upon selling sentient tokens there is fees imposed.
+        let data = iface.encodeFunctionData('swapExactTokensForTokensSupportingFeeOnTransferTokens', [amountInInWei, amountOutMinInWei, path, to, deadline]);
 
         // Append builderID if provided
-        if (!builderID && builderID !== undefined) {
-            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(builderID), 2); // Encode builderID as 2-byte hex
+        if (option && option.builderID && option.builderID !== undefined) {
+            const builderIDHex = ethers.zeroPadValue(ethers.toBeHex(option.builderID), 2); // Encode builderID as 2-byte hex
             data += builderIDHex.slice(2); // Remove '0x' from builderIDHex and append
         }
 
@@ -73,7 +67,13 @@ export class Sentient extends TokenBase {
         return tx;
     }
 
-    private async checkTokenAllowance(amountInWei: string, fromTokenAddress: string) {
-        await this.checkAllowanceAndApprove(amountInWei, fromTokenAddress, this.uniswapV2routerAddr);
+    public async checkTokenAllowance(amountInWei: string, fromTokenAddress: string) {
+        // Use the provided sentient token address or fallback to the default virtuals token address.
+        return await this.checkAllowance(amountInWei, fromTokenAddress, this.uniswapV2routerAddr);
+    }
+
+    public async approveTokenAllowance(amountInWei: string, fromTokenAddress: string) {
+        // Use the provided sentient token address or fallback to the default virtuals token address.
+        return await this.approveAllowance(amountInWei, fromTokenAddress, this.uniswapV2routerAddr);
     }
 }
