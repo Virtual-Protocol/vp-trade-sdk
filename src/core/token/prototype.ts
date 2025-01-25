@@ -1,7 +1,7 @@
 import { ethers, parseEther } from 'ethers';
 import { bondingAbi } from '../../assets/bonding';
 import { frouterAbi } from '../../assets/frouter';
-import { PurchaseType } from '../../constant';
+import { PurchaseType, CONFIG } from '../../constant';
 import { TokenBase } from './tokenbase'
 import { Option } from '../../sdkClient';
 
@@ -114,7 +114,8 @@ export class Prototype extends TokenBase {
 
     public async getQuote(side: PurchaseType, amount: string, prototypeTokenAddress: string): Promise<string> {
         //Specifies the rate remaining after applying tax.
-        const afterTaxRate = 0.99; // 99% of the original amount remains after applying a 1% tax.
+        const taxRate = CONFIG.TAX_RATE; // e.g. 1% tax rate
+        const afterTaxRate = 1 - taxRate; // e.g. 99% of the original amount remains after applying a 1% tax.
 
         const frouterContract: ethers.Contract = new ethers.Contract(this.virtualRouter, frouterAbi, this.wallet);
         if (side === PurchaseType.BUY) {
