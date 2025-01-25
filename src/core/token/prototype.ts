@@ -113,13 +113,12 @@ export class Prototype extends TokenBase {
     }
 
     public async getQuote(side: PurchaseType, amount: string, prototypeTokenAddress: string): Promise<string> {
-        const tax = 0.99;
-
-        console.log('getQuote')
+        //Specifies the rate remaining after applying tax.
+        const afterTaxRate = 0.99; // 99% of the original amount remains after applying a 1% tax.
 
         const frouterContract: ethers.Contract = new ethers.Contract(this.virtualRouter, frouterAbi, this.wallet);
         if (side === PurchaseType.BUY) {
-            const amountAfterDeductingTax = +amount * tax;
+            const amountAfterDeductingTax = +amount * afterTaxRate;
             return await frouterContract.getAmountsOut(prototypeTokenAddress, this.virtualsTokenAddr, parseEther(amountAfterDeductingTax.toString()));
         } else {
             // for sell prototype token to get virtuals, asset token use zero address.
