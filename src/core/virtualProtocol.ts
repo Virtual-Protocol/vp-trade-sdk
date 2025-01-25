@@ -80,24 +80,24 @@ class VirtualApiManager {
 
             // Map the response data to match the TokenList structure
             return response.body.data.map((item: Token) => ({
-                id: item.id ?? '',
+                id: item.id ?? 0,
                 name: item.name ?? '',
                 status: item.status ?? '',
                 tokenAddress: item.tokenAddress ?? '',
                 description: item.description ?? '',
                 lpAddress: item.lpAddress ?? '',
                 symbol: item.symbol ?? '',
-                holderCount: item.holderCount ?? '',
-                mcapInVirtual: item.mcapInVirtual ?? '',
+                holderCount: item.holderCount ?? 0,
+                mcapInVirtual: item.mcapInVirtual ?? 0,
                 socials: {
                     x: item.socials?.x ?? '',
                     TWITTER: item.socials?.TWITTER ?? '',
                     VERIFIED_LINKS: {
-                        TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? '', 
+                        TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? '',
                     },
                 },
                 image: {
-                    id: item.image?.id ?? '',
+                    id: item.image?.id ?? 0,
                     url: item.image?.url ?? '',
                 }
             }))[0];
@@ -153,24 +153,24 @@ class VirtualApiManager {
 
             // Map the response data to match the TokenList structure
             return response.body.data.map((item: Token) => ({
-                id: item.id ?? '',
+                id: item.id ?? 0,
                 name: item.name ?? '',
                 status: item.status ?? '',
                 tokenAddress: item.tokenAddress ?? '',
                 description: item.description ?? '',
                 lpAddress: item.lpAddress ?? '',
                 symbol: item.symbol ?? '',
-                holderCount: item.holderCount ?? '',
-                mcapInVirtual: item.mcapInVirtual ?? '',
+                holderCount: item.holderCount ?? 0,
+                mcapInVirtual: item.mcapInVirtual ?? 0,
                 socials: {
                     x: item.socials?.x ?? '',
                     TWITTER: item.socials?.TWITTER ?? '',
                     VERIFIED_LINKS: {
-                        TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? '', 
+                        TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? '',
                     },
                 },
                 image: {
-                    id: item.image?.id ?? '',
+                    id: item.image?.id ?? 0,
                     url: item.image?.url ?? '',
                 }
             }));

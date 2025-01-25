@@ -206,12 +206,12 @@ export class SDKClient {
     }
 
     /**
-     * Get a List of Sentinent Tokens
+     * Get a List of Sentient Tokens
      * @param pageNumber Page number for pagination
      * @param pageSize Page size for pagination
      * @returns Token list data
      */
-    public async getSentinentListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
+    public async getSentientListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
         return await this.virtualApiManager.fetchVirtualTokenLists(TokenType.SENTIENT, pageNumber, pageSize);
     }
 
