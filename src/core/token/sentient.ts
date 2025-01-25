@@ -31,9 +31,6 @@ export class Sentient extends TokenBase {
         const slippageFraction = (ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(10000)) / ethers.toBigInt(10000); // Convert percentage to fraction
         const amountOutMinInWei = ethers.toBigInt(amountsOutInWei[1]) - (ethers.toBigInt(amountsOutInWei[1]) * slippageFraction) / ethers.toBigInt(100);
 
-        console.log('amountOutInWei: ', amountsOutInWei.toString());
-        console.log('amountOutMinInWei: ', amountOutMinInWei.toString());
-
         // Notes: removed, this should be responsibility on builder.
         // await this.checkTokenAllowance(amountInInWei.toString(), fromTokenAddress);
 

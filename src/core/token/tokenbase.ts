@@ -43,38 +43,6 @@ export class TokenBase {
         }
     }
 
-    // protected async checkAllowanceAndApprove(amountInWei: string, tokenAddress: string, routerAddress: string) {
-    //     const tokenContract: ethers.Contract = new ethers.Contract(tokenAddress, ERC20TokenABI, this.wallet);
-
-    //     console.log('amountInWei', amountInWei);
-
-    //     // Check wallet balance first.
-    //     const tokenBalance: BigNumberish = await tokenContract.balanceOf(this.wallet.address);
-    //     console.log('tokenBalance:', tokenBalance)
-    //     if (!tokenBalance || BigInt(tokenBalance) < BigInt(amountInWei)) {
-    //         throw new Error(`Connected wallet doesn't have enough balance: ${tokenBalance}`);
-    //     }
-
-    //     // Get allowance.
-    //     const allowance: BigNumberish = await tokenContract.allowance(this.wallet.address, routerAddress);
-
-    //     // Send an approve allowance tx if allowance is less than amount.
-    //     if (!allowance || BigInt(allowance) < BigInt(amountInWei)) {
-    //         try {
-    //             // Approve allowance to the router address
-    //             const tx: ContractTransactionReceipt = await tokenContract.approve(routerAddress, amountInWei);
-
-    //             console.log(`Allowance has been approved: ${tx.hash}, amount: ${amountInWei}`);
-    //             return;
-    //         } catch (error) {
-    //             throw new Error(`Failed to approve allowance: ${error}`);
-    //         }
-    //     }
-
-    //     console.log(`Connected wallet has enough allowance amount: ${allowance}`);
-    //     return;
-    // }
-
     protected async estimateGas(tx: ethers.TransactionRequest): Promise<ethers.TransactionRequest> {
         const provider = this.wallet.provider;
         if (!provider) {

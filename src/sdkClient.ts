@@ -6,14 +6,14 @@ import { WalletManager } from './core/wallet';
 import { CONFIG, PurchaseType, TokenType } from './constant';
 import { Prototype, Sentient } from './core/token';
 
-interface ClientConfig {
+export interface ClientConfig {
     privateKey: string;
     rpcUrl: string;
     apiKey: string;
     virtualApiUrl: string;
 }
 
-interface TokenList {
+export interface TokenList {
     tokens: Token[];
 }
 
@@ -22,7 +22,7 @@ export interface Option {
     slippage?: number;
 }
 
-interface Token {
+export interface Token {
     id: number; // Represents the unique identifier of the token
     name: string; // Name of the token
     status: string; // Status of the token (e.g., "AVAILABLE")
@@ -186,11 +186,11 @@ export class SDKClient {
 
 
     /**
- * Check Prototype Token Allowance
- * @param amountInWei 
- * @param fromTokenAddress 
- * @returns 
- */
+     * Check Prototype Token Allowance
+     * @param amountInWei 
+     * @param fromTokenAddress 
+     * @returns 
+     */
     public async checkPrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
         return await this.transactionManager.checkPrototypeAllowance(amountInWei, fromTokenAddress);
     }
@@ -206,9 +206,9 @@ export class SDKClient {
     }
 
     /**
-     * Get a List of Sentient Tokens
-     * @param pageNumber Page number for pagination
-     * @param pageSize Page size for pagination
+     * Get a List of Sentient Tokens sorted by highest total value locked
+     * @param pageNumber Page number for pagination, default value is 1
+     * @param pageSize Page size for pagination, default value is 30
      * @returns Token list data
      */
     public async getSentientListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {
@@ -216,9 +216,9 @@ export class SDKClient {
     }
 
     /**
-     * Get a List of Prototype Tokens
-     * @param pageNumber Page number for pagination
-     * @param pageSize Page size for pagination
+     * Get a List of Prototype Tokens sorted by highest total value locked
+     * @param pageNumber Page number for pagination, default value is 1
+     * @param pageSize Page size for pagination, default value is 30
      * @returns Token list data
      */
     public async getPrototypeListing(pageNumber: number = 1, pageSize: number = 30): Promise<TokenList> {

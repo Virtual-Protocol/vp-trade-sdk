@@ -111,7 +111,7 @@ class VirtualApiManager {
 
     /**
      * Fetch the token lists from the Virtuals API.
-     * @param type The type of the virtual listing ('prototype' or 'sentinent').
+     * @param type The type of the virtual listing ('prototype' or 'sentient').
      * @param page The page number for pagination.
      * @param pageSize The page size for pagination.
      * @returns The token list data.

@@ -1,4 +1,4 @@
-import { SDKClient } from 'vp-trade-sdk/sdkClient';
+import { SDKClient, TokenList } from 'vp-trade-sdk/sdkClient';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -10,36 +10,28 @@ const config = {
 };
 
 const sdkClient = new SDKClient(config);
+
+// Example to buy the highest total value locked prototype token
 async function main() {
     try {
-        console.log('Wallet Address:', sdkClient.getAddress());
 
-        // default page number - 1, page size - 10
-        // console.log('Fetched Prototype Token List:', await sdkClient.getPrototypeListing());
+        // Get highest total value locked prototype tokens
+        const prototypeTokens: TokenList = await sdkClient.getPrototypeListing();
+        const highestTotalValueLockedTokenAddress = prototypeTokens.tokens[0].tokenAddress;
 
-        // default page number - 1, page size - 10
-        // console.log('Fetched Sentinent Token List:', await sdkClient.getSentinentListing());
+        // Fetch the highest total value locked prototype token
+        const Token = await sdkClient.fetchToken(highestTotalValueLockedTokenAddress);
+        console.log('Highest total value locked prototype token:', Token);
 
-        // test swap sentient
-        // const GAMESentienttTokenAddress = '0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3';
-        // const amount = '0.01';
-        // const receipt = await sdkClient.swapInSentientTokens(GAMESentienttTokenAddress, amount);
-        // console.log('Sentient txn receipt: ', receipt); 
-
-        const GAMESentienttTokenAddress = '0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3';
-        const amount = '0.15';
-        const receipt = await sdkClient.swapOutSentientTokens(GAMESentienttTokenAddress, amount);
-        console.log('Sentient Swap Out txn receipt: ', receipt); 
-
-        // const TRUMPAGENTPrototype = '0x069E372EE0164c4D50F6F789f07fDE286DdB524C';
-        // const amount = '0.01';
-        // const receipt = await sdkClient.buyPrototypeTokens(TRUMPAGENTPrototype, amount);
-        // console.log('Buy Prototype txn receipt: ', receipt); 
-
-        // const receipt = await sdkClient.sellPrototypeTokens(TRUMPAGENTPrototype, '1649.997277');
-        // console.log('Sell Prototype txn receipt: ', receipt); 
-
-        console.log('Fetch by address:', await sdkClient.fetchToken('0x5E8639baE1009E099d566007Bc1C4A6B55F7DB8e'));
+        // Check if the allowance is enough to buy 0.01 prototype token 
+        const amountToBuy = '0.01';
+        const isAllowanceEnough = await sdkClient.checkPrototypeAllowance(amountToBuy, highestTotalValueLockedTokenAddress);
+        if (isAllowanceEnough) {
+            // Buy the 0.01 prototype token obtained above
+            await sdkClient.buyPrototypeTokens(highestTotalValueLockedTokenAddress, amountToBuy);
+        } else {
+            console.log('Allowance is not enough to buy 0.01 prototype token');
+        }
 
     } catch (error) {
         // Handle any errors
