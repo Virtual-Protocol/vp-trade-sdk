@@ -6,7 +6,17 @@ npm install
 
 ## Usage
 
-### 1. Initialize the SDK Client
+### 1. Configure Environment Variables
+Before using the SDK, ensure that you configure your environment variables by replacing the placeholders with your keys and URLs in `.env`:
+
+```
+PRIVATE_KEY={replace with your wallet's private key}
+RPC_PROVIDER_URL={replace with your RPC provider's url}
+RPC_API_KEY={replace with your RPC API key here}
+VIRTUALS_API_URL=https://api.virtuals.io/api/virtuals
+```
+
+### 2. Initialize the SDK Client
 
 The `SDKClient` requires a configuration object to initialize. Ensure you provide the necessary values like `privateKey`, `rpcUrl`, `apiKey`, and `virtualApiUrl`.
 
@@ -26,7 +36,7 @@ const config = {
 const sdkClient = new SDKClient(config);
 ```
 
-### 2. Example: Buy the Highest Total Value Locked Prototype Token
+### 3. Example: Buy the Highest Total Value Locked Prototype Token
 
 ```javascript
     try {
@@ -55,7 +65,7 @@ const sdkClient = new SDKClient(config);
     }
 ```
 
-### 3. Other Examples
+### 4. Other Examples
 
 #### Get Wallet Address
 
