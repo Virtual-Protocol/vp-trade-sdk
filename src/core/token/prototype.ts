@@ -100,16 +100,16 @@ export class Prototype extends TokenBase {
         return tx;
     }
 
-    public async checkTokenAllowance(amountInWei: string, prototypeTokenAddress?: string) {
+    public async checkTokenAllowance(amount: string, prototypeTokenAddress?: string) {
         // Use the provided prototype token address or fallback to the default virtuals token address.
         const tokenAddress = prototypeTokenAddress ? prototypeTokenAddress : this.virtualsTokenAddr;
-        return await this.checkAllowance(amountInWei, tokenAddress, this.virtualRouter);
+        return await this.checkAllowance(amount, tokenAddress, this.virtualRouter);
     }
 
-    public async approveTokenAllowance(amountInWei: string, prototypeTokenAddress?: string) {
+    public async approveTokenAllowance(amount: string, prototypeTokenAddress?: string) {
         // Use the provided prototype token address or fallback to the default virtuals token address.
         const tokenAddress = prototypeTokenAddress ? prototypeTokenAddress : this.virtualsTokenAddr;
-        return await this.approveAllowance(amountInWei, tokenAddress, this.virtualRouter);
+        return await this.approveAllowance(amount, tokenAddress, this.virtualRouter);
     }
 
     public async getQuote(side: PurchaseType, amount: string, prototypeTokenAddress: string): Promise<string> {

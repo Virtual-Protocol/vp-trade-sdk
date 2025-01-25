@@ -96,10 +96,11 @@ export class SDKClient {
     }
 
     /**
-     * Swap Prototype tokens from Virtuals 
-     * @param tokenAddress Token swap from Virtuals
-     * @param amount Amount to swap
+     * Buy Sentient tokens from Virtuals 
+     * @param tokenAddress Sentient Token buy from Virtuals
+     * @param amount Amount of Virtuals to buy Sentient tokens
      * @param builderID 
+     * @returns ethers.TransactionReceipt
      */
     public async buySentientTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
         const from = CONFIG.VIRTUALS_TOKEN_ADDR;
@@ -113,10 +114,11 @@ export class SDKClient {
     }
 
     /**
-     * Swap Prototype tokens to Virtuals 
-     * @param tokenAddress Token swap to Virtuals
-     * @param amount Amount to swap
+     * Sell Sentient tokens to Virtuals 
+     * @param tokenAddress Sentient token to sell to Virtuals
+     * @param amount Amount of Sentient tokens to sell
      * @param builderID 
+     * @returns ethers.TransactionReceipt
      */
     public async sellSentientTokens(tokenAddress: string, amount: string, builderID?: number): Promise<ethers.TransactionReceipt> {
         const from = tokenAddress;
@@ -131,9 +133,10 @@ export class SDKClient {
 
     /**
      * Buy Prototype tokens from Virtuals 
-     * @param tokenAddress Token buy from Virtuals
-     * @param amount Amount to buy
+     * @param tokenAddress Prototype Token buy from Virtuals
+     * @param amount Amount of Virtuals to buy Prototype tokens
      * @param builderID 
+     * @returns ethers.TransactionReceipt
      */
     public async buyPrototypeTokens(tokenAddress: string, amount: string, option?: Option): Promise<ethers.TransactionReceipt> {
         const from = CONFIG.VIRTUALS_TOKEN_ADDR;
@@ -147,11 +150,11 @@ export class SDKClient {
     }
 
     /**
-     * Sell Prototype tokenes to Virtuals
-     * @param tokenAddress Token sell to Virtuals
-     * @param amount Amount to sell
+     * Sell Prototype tokens to Virtuals
+     * @param tokenAddress Prototype Token sell to Virtuals
+     * @param amount Amount of Prototype tokens to sell
      * @param builderID 
-     * @returns 
+     * @returns ethers.TransactionReceipt
      */
     public async sellPrototypeTokens(tokenAddress: string, amount: string, option?: Option): Promise<ethers.TransactionReceipt> {
         const from = tokenAddress;
@@ -165,44 +168,44 @@ export class SDKClient {
     }
 
     /**
-     * Check Sentient Token Allowance
-     * @param amountInWei 
-     * @param fromTokenAddress 
-     * @returns 
+     * Checks the allowance for Sentient Tokens before performing a buy or sell operation.
+     * @param amount - The amount of Virtual Tokens for buying Sentient Tokens or the amount of Sentient Tokens for selling.
+     * @param fromTokenAddress (optional) - The address of the Sentient Token to sell. Defaults to the Virtual Token address when buying.
+     * @returns A boolean indicating whether the allowance is sufficient.
      */
-    public async checkSentientAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
-        return await this.transactionManager.checkSentientAllowance(amountInWei, fromTokenAddress);
+    public async checkSentientAllowance(amount: string, fromTokenAddress?:string): Promise<boolean> {
+        return await this.transactionManager.checkSentientAllowance(amount, fromTokenAddress? fromTokenAddress: CONFIG.VIRTUALS_TOKEN_ADDR);
     }
 
     /**
-     * Check Sentient Token Allowance
-     * @param amountInWei 
-     * @param fromTokenAddress 
-     * @returns 
+     * Approve Sentient Token Allowance before buying / selling Sentient tokens
+     * @param amount - The amount of Virtual Tokens for buying Sentient Tokens or the amount of Sentient Tokens for selling.
+     * @param fromTokenAddress <Optional> fromTokenAddress - Pass in Sentient Token Address for selling sentient tokens, default is Virtuals Token Address (during buying)
+     * @returns A string of hash of the approved transaction receipt
      */
-    public async approveSentientAllowance(amountInWei: string, fromTokenAddress: string): Promise<string> {
-        return await this.transactionManager.approveSentientAllowance(amountInWei, fromTokenAddress);
+    public async approveSentientAllowance(amount: string, fromTokenAddress?: string): Promise<string> {
+        return await this.transactionManager.approveSentientAllowance(amount, fromTokenAddress? fromTokenAddress: CONFIG.VIRTUALS_TOKEN_ADDR);
     }
 
 
     /**
-     * Check Prototype Token Allowance
-     * @param amountInWei 
-     * @param fromTokenAddress 
-     * @returns 
+     * Checks the allowance for Prototype Tokens before performing a buy or sell operation.
+     * @param amount - The amount of Virtual Tokens for buying Prototype Tokens or the amount of Prototype Tokens for selling.
+     * @param fromTokenAddress (optional) - The address of the Sentient Token to sell. Defaults to the Virtual Token address when buying.
+     * @returns A boolean indicating whether the allowance is sufficient.
      */
-    public async checkPrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
-        return await this.transactionManager.checkPrototypeAllowance(amountInWei, fromTokenAddress);
+    public async checkPrototypeAllowance(amount: string, fromTokenAddress?: string): Promise<boolean> {
+        return await this.transactionManager.checkPrototypeAllowance(amount, fromTokenAddress? fromTokenAddress: CONFIG.VIRTUALS_TOKEN_ADDR);
     }
 
     /**
-     * Check Prototype Token Allowance
-     * @param amountInWei 
-     * @param fromTokenAddress 
-     * @returns 
+     * Approve Prototype Token Allowance before buying / selling Prototype tokens
+     * @param amount - The amount of Virtual Tokens for buying Prototype Tokens or the amount of Prototype Tokens for selling.
+     * @param fromTokenAddress (optional) - The address of the Sentient Token to sell. Defaults to the Virtual Token address when buying.
+     * @returns A string of hash of the approved transaction receipt
      */
-    public async approvePrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<string> {
-        return await this.transactionManager.approvePrototypeAllowance(amountInWei, fromTokenAddress);
+    public async approvePrototypeAllowance(amount: string, fromTokenAddress?: string): Promise<string> {
+        return await this.transactionManager.approvePrototypeAllowance(amount, fromTokenAddress? fromTokenAddress: CONFIG.VIRTUALS_TOKEN_ADDR);
     }
 
     /**

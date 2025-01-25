@@ -14,7 +14,7 @@ export class TokenBase {
 
         // Check wallet balance first.
         const tokenBalance: BigNumberish = await tokenContract.balanceOf(this.wallet.address);
-
+        
         if (!tokenBalance || BigInt(tokenBalance) < BigInt(amountInWei)) {
             throw new Error(`Connected wallet doesn't have enough balance: ${tokenBalance}`);
         }
@@ -34,10 +34,14 @@ export class TokenBase {
 
         try {
             // Approve allowance to the router address
-            const tx: ContractTransactionReceipt = await tokenContract.approve(routerAddress, amountInWei);
+            const tx = await tokenContract.approve(routerAddress, amountInWei);
 
             console.log(`Allowance has been approved: ${tx.hash}, amount: ${amountInWei}`);
-            return tx.hash
+
+            // Wait for the transaction to be mined
+            const txReceipt: ContractTransactionReceipt = await tx.wait();
+            
+            return txReceipt.hash;
         } catch (error) {
             throw new Error(`Failed to approve allowance: ${error}`);
         }

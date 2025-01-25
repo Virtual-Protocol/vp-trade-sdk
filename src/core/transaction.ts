@@ -58,17 +58,17 @@ export class TransactionManager {
     }
 
     
-    public async checkPrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
+    public async checkPrototypeAllowance(amount: string, fromTokenAddress: string): Promise<boolean> {
         try {
-            return await this.prototype.checkTokenAllowance(amountInWei, fromTokenAddress);
+            return await this.prototype.checkTokenAllowance(amount, fromTokenAddress);
         } catch (error) {
             throw new Error(`Failed to check prototype allowance: ${error}`);
         }
     }
 
-    public async approvePrototypeAllowance(amountInWei: string, fromTokenAddress: string): Promise<string> {
+    public async approvePrototypeAllowance(amount: string, fromTokenAddress: string): Promise<string> {
         try {
-            return await this.prototype.approveTokenAllowance(amountInWei, fromTokenAddress);
+            return await this.prototype.approveTokenAllowance(amount, fromTokenAddress);
         } catch (error) {
             throw new Error(`Failed to approve prototype allowance: ${error}`);
         }
@@ -109,9 +109,9 @@ export class TransactionManager {
         }
     }
 
-    public async checkSentientAllowance(amountInWei: string, fromTokenAddress: string): Promise<boolean> {
+    public async checkSentientAllowance(amount: string, fromTokenAddress: string): Promise<boolean> {
         try {
-            return await this.sentient.checkTokenAllowance(amountInWei, fromTokenAddress);
+            return await this.sentient.checkTokenAllowance(amount, fromTokenAddress);
         } catch (error) {
             throw new Error(`Failed to check sentient allowance: ${error}`);
         }
