@@ -7,7 +7,7 @@ npm install
 ## Usage
 
 ### 1. Configure Environment Variables
-Before using the SDK, ensure that you configure your environment variables by replacing the placeholders with your keys and URLs in `.env`:
+Before using the SDK, ensure that you configure your environment variables by replacing the placeholders with your keys and URLs in `.env`, refer `/example/.env.example` file:
 
 ```
 PRIVATE_KEY={replace with your wallet's private key}
@@ -36,7 +36,8 @@ const config = {
 const sdkClient = new SDKClient(config);
 ```
 
-### 3. Example: Buy a sentient token
+### 3. Example: check `/example/src/index.ts`
+Buy a sentient token
 
 ```javascript
 import { SDKClient } from 'vp-trade-sdk';
