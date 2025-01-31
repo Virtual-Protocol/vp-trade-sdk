@@ -13,7 +13,24 @@ const sdkClient = new SDKClient(config);
 
 async function main() {
     try {
-        exampleBuySentientToken();
+        const pageNumber = 1;
+        const pageSize = 10;
+
+        const sentientTokens = await sdkClient.getSentientListing(pageNumber, pageSize);
+        console.log('Sentient Tokens length:', sentientTokens.tokens.length);
+        const topSentienTokenAddress = sentientTokens.tokens[0].tokenAddress;
+        console.log('Highest Total Value Locked Sentient Token address:', topSentienTokenAddress);
+        const topSentientTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topSentienTokenAddress);
+        console.log('Highest Total Value Locked Sentient Token details:', topSentientTokenDetails);
+
+        const prototypeTokens = await sdkClient.getPrototypeListing(pageNumber, pageSize);
+        console.log('Prototype Tokens length:', prototypeTokens.tokens.length);
+        const topPrototypeTokenAddress = prototypeTokens.tokens[0].tokenAddress;
+        console.log('Highest Total Value Locked Prototype Token address:', topPrototypeTokenAddress);
+        const topPrototypeTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topPrototypeTokenAddress);
+        console.log('Highest Total Value Locked Prototype Token details:', topPrototypeTokenDetails);
+
+        // exampleBuySentientToken();
         // exampleSellSentientToken();
         // exampleBuyPrototypeToken();
         // exampleSellPrototypeToken();
