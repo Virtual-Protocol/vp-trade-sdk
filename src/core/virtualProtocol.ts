@@ -15,15 +15,15 @@ interface Token {
   tokenAddress: string; // The address of the token
   preToken: string; // The address of the pre-bonding token
   description: string; // A brief description of the token
-  lpAddress: string; // Liquidity pool address for the token
+  lpAddress: string; // The address of the post-bonding token pair
+  preTokenPair: string; // The address of the pre-bonding token pair
   symbol: string; // Symbol of the token (e.g., "LUNA")
   holderCount: number; // Number of holders of the token
   mcapInVirtual: number; // Market cap in virtual (e.g., in USD or other virtual currency)
   socials: {
-    x: string; // Link to the token's social media (e.g., Twitter handle)
-    TWITTER: string; // Verified Twitter link
     VERIFIED_LINKS: {
       TWITTER: string; // Verified Twitter link
+      TELEGRAM: string; // Verified Telegram link
     };
   };
   image: {
@@ -95,15 +95,14 @@ class VirtualApiManager {
         status: item.status ?? "",
         tokenAddress: item.tokenAddress || item.preToken || "",
         description: item.description ?? "",
-        lpAddress: item.lpAddress ?? "",
+        lpAddress: item.lpAddress || item.preTokenPair || "",
         symbol: item.symbol ?? "",
         holderCount: item.holderCount ?? 0,
         mcapInVirtual: item.mcapInVirtual ?? 0,
         socials: {
-          x: item.socials?.x ?? "",
-          TWITTER: item.socials?.TWITTER ?? "",
           VERIFIED_LINKS: {
             TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? "",
+            TELEGRAM: item.socials?.VERIFIED_LINKS?.TELEGRAM ?? "",
           },
         },
         image: {
@@ -176,15 +175,14 @@ class VirtualApiManager {
         status: item.status ?? "",
         tokenAddress: item.tokenAddress || item.preToken || "",
         description: item.description ?? "",
-        lpAddress: item.lpAddress ?? "",
+        lpAddress: item.lpAddress || item.preTokenPair || "",
         symbol: item.symbol ?? "",
         holderCount: item.holderCount ?? 0,
         mcapInVirtual: item.mcapInVirtual ?? 0,
         socials: {
-          x: item.socials?.x ?? "",
-          TWITTER: item.socials?.TWITTER ?? "",
           VERIFIED_LINKS: {
             TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? "",
+            TELEGRAM: item.socials?.VERIFIED_LINKS?.TELEGRAM ?? "",
           },
         },
         image: {

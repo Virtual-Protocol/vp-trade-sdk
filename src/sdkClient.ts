@@ -33,10 +33,9 @@ export interface Token {
   holderCount: number; // Number of holders of the token
   mcapInVirtual: number; // Market cap in virtual (e.g., in USD or other virtual currency)
   socials: {
-    x: string; // Link to the token's social media (e.g., Twitter handle)
-    TWITTER: string; // Verified Twitter link
     VERIFIED_LINKS: {
       TWITTER: string; // Verified Twitter link
+      TELEGRAM: string; // Verified Telegram link
     };
   };
   image: {

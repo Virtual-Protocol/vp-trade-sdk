@@ -3,7 +3,7 @@
 ```bash
 npm install
 npm run build
-cd /examples
+cd /example
 npm install
 ```
 
@@ -11,7 +11,7 @@ npm install
 
 ### 1. Run Example
 
-- cd `/examples`
+- cd `/example`
 - create `/example/.env` file based on `/example/.env.example`
 - check and update `/example/src/index.ts` file
 - `npm run start`
