@@ -58,10 +58,6 @@ class VirtualApiManager {
     try {
       // Define the query parameters
       const queryParams = {
-        // 'filters[status][$in][0]': 'AVAILABLE',
-        // 'filters[status][$in][1]': 'ACTIVATING',
-        // 'filters[status][$in][2]': 'UNDERGRAD',
-        // 'filters[priority][$ne]': '-1',
         "filters[status]": FILTER_AGENT_STATUS.SEARCH.toString(),
         "filters[$or][0][name][$contains]": keyword,
         "filters[$or][1][symbol][$contains]": keyword,
@@ -133,9 +129,6 @@ class VirtualApiManager {
   ): Promise<TokenList> {
     try {
       const queryParams = {
-        // 'filters[status][$in][0]': '',
-        // 'filters[status][$in][1]': '',
-        // 'filters[priority][$ne]': '-1',
         "filters[status]": '',
         "sort[0]": "totalValueLocked:desc",
         "sort[1]": "createdAt:desc",
@@ -146,11 +139,8 @@ class VirtualApiManager {
 
       // Set the status condition based on tokenAddress
       if (type === TokenType.SENTIENT) {
-        // queryParams['filters[status][$in][0]'] = 'AVAILABLE';
-        // queryParams['filters[status][$in][1]'] = 'ACTIVATING';
         queryParams["filters[status]"] = FILTER_AGENT_STATUS.SENTIENT.toString();
       } else {
-        // queryParams['filters[status][$in][0]'] = 'UNDERGRAD';
         queryParams["filters[status]"] = FILTER_AGENT_STATUS.PROTOTYPE.toString();
       }
 
