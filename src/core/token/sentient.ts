@@ -3,6 +3,10 @@ import { uniswapV2routerAbi } from '../../assets/uniswapV2router';
 import { TokenBase } from './tokenbase'
 import { Option } from '../../sdkClient';
 
+// Define constants for default and minimum slippage
+const DEFAULT_SLIPPAGE = 5;
+const MINIMUM_SLIPPAGE = 2;
+
 export class Sentient extends TokenBase {
     private uniswapV2routerAddr: string;
 
@@ -24,8 +28,8 @@ export class Sentient extends TokenBase {
         const path = [fromTokenAddress, toTokenAddress]; // Token A -> Token B
         const amountsOutInWei = await uniswapV2routerContract.getAmountsOut(amountInInWei, path);
 
-        // Default slippage percentage to 5%
-        const userSlippagePercentage = option && option.slippage ? option.slippage : 5; // Use provided slippage or default to 5%
+        // Use provided slippage or default to 5%, but not less than 2%
+        const userSlippagePercentage = Math.max(option?.slippage ?? DEFAULT_SLIPPAGE, MINIMUM_SLIPPAGE);
 
         // Calculate amountOutMinInWei with the user-defined slippage
         const slippageFraction = (ethers.toBigInt(userSlippagePercentage) * ethers.toBigInt(10000)) / ethers.toBigInt(10000); // Convert percentage to fraction

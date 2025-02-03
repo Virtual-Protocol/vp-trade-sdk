@@ -16,3 +16,10 @@ export const CONFIG = {
     BONDING_CURVE_ADDR: '0xF66DeA7b3e897cD44A5a231c61B6B4423d613259',
     TAX_RATE: 0.01, // 1% tax rate for the prototype token transactions
 };
+
+export const FILTER_AGENT_STATUS = {
+    DRAFT: 0,
+    PROTOTYPE: 1,
+    SENTIENT: 2,
+    SEARCH: 3,
+};

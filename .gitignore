@@ -1,6 +1,10 @@
 node_modules
 dist
-.env
-/example/node_modules
-/example/dist
+
+# Ignore all .env files
+*.env
+# But do not ignore env.example.toml
+!.env.example
+
 /example/.env
+./example/.env

@@ -1,71 +1,23 @@
 ## Installation
 
 ```bash
-npm install 
+npm install
+npm run build
+cd /example
+npm install
 ```
 
 ## Usage
 
-### 1. Configure Environment Variables
-Before using the SDK, ensure that you configure your environment variables by replacing the placeholders with your keys and URLs in `.env`, refer `/example/.env.example` file:
+### 1. Run Example
 
-```
-PRIVATE_KEY={replace with your wallet's private key}
-RPC_PROVIDER_URL={replace with your RPC provider's url}
-RPC_API_KEY={replace with your RPC API key here}
-VIRTUALS_API_URL=https://api.virtuals.io/api/virtuals
-```
+- cd `/example`
+- create `/example/.env` file based on `/example/.env.example`
+- check and update `/example/src/index.ts` file
+- `npm run start`
 
-### 2. Initialize the SDK Client
 
-The `SDKClient` requires a configuration object to initialize. Ensure you provide the necessary values like `privateKey`, `rpcUrl`, `apiKey`, and `virtualApiUrl`.
-
-```javascript
-import { SDKClient } from 'vp-trade-sdk';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const config = {
-    privateKey: process.env.PRIVATE_KEY || '',
-    rpcUrl: process.env.RPC_PROVIDER_URL || '',
-    apiKey: process.env.RPC_API_KEY || '',
-    virtualApiUrl: process.env.VIRTUALS_API_URL || '',
-};
-
-const sdkClient = new SDKClient(config);
-```
-
-### 3. Example: check `/example/src/index.ts`
-Buy a sentient token
-
-```javascript
-import { SDKClient } from 'vp-trade-sdk';
-
-const config = {
-    privateKey: process.env.PRIVATE_KEY || '',
-    rpcUrl: process.env.RPC_PROVIDER_URL || '',
-    apiKey: process.env.RPC_API_KEY || '',
-    virtualApiUrl: process.env.VIRTUALS_API_URL || '',
-};
-
-const sdkClient = new SDKClient(config);
-
-async function exampleBuyingSentientToken() {
-    // Buy Sentient Tokens
-    const amountToBuy = '0.01';
-    const isBuyingAllowanceEnough = await sdkClient.checkSentientAllowance(amountToBuy);
-    
-    if (isBuyingAllowanceEnough) {
-        await sdkClient.buySentientTokens("<SENTIENT_TOKEN>", amountToBuy);
-    } else {
-        await sdkClient.approveSentientAllowance(amountToBuy);
-        await sdkClient.buySentientTokens("<SENTIENT_TOKEN>", amountToBuy);
-    }
-}
-```
-
-### 4. Other Examples
+### 2. Other Examples
 
 #### Get Wallet Address
 
@@ -80,25 +32,6 @@ console.log('Wallet Address:', walletAddress);
 const signedMessage = await sdkClient.signMessage('Hello, blockchain!');
 console.log('Signed Message:', signedMessage);
 ```
-
-#### Get Sentient Token Listings
-
-```javascript
-const sentientTokens = await sdkClient.getSentientListing();
-console.log('Sentient Tokens:', sentientTokens);
-```
-
-## Configuration Object
-
-The `ClientConfig` object requires the following parameters:
-
-| Parameter       | Type   | Description                                         |
-| --------------- | ------ | --------------------------------------------------- |
-| `privateKey`    | string | Private key of the wallet for signing transactions. |
-| `rpcUrl`        | string | RPC URL for blockchain communication.               |
-| `apiKey`        | string | API key for RPC provider.                           |
-| `virtualApiUrl` | string | URL for the Virtual API endpoint.                   |
-
 
 ## Methods
 
@@ -120,11 +53,10 @@ The `ClientConfig` object requires the following parameters:
 
 - `getSentientListing(pageNumber?: number, pageSize?: number)`: Get Sentient token listings
 - `getPrototypeListing(pageNumber?: number, pageSize?: number)`: Get Prototype token listings
-- `fetchToken(tokenAddress: string)`: Fetch token details by address
+- `searchVirtualTokensByKeyword(tokenAddress: string)`: Fetch token details by address
 
 
+## Builder Fee
+If you are using this SDK for getting builder fee, please contact us at [matthew@virtuals.io](mailto:matthew@virtuals.io) or [victorng@virtuals.io](mailto:victorng@virtuals.io)
 
 ## License
-
-
-
