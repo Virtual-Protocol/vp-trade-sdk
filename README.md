@@ -55,6 +55,8 @@ console.log('Signed Message:', signedMessage);
 - `getPrototypeListing(pageNumber?: number, pageSize?: number)`: Get Prototype token listings
 - `searchVirtualTokensByKeyword(tokenAddress: string)`: Fetch token details by address
 
+### K-line Data
+- `fetchKlines(params: GetKlinesParams)`: Fetch K-line data
 
 ## Builder Fee
 If you are using this SDK for getting builder fee, please contact us at [matthew@virtuals.io](mailto:matthew@virtuals.io) or [victorng@virtuals.io](mailto:victorng@virtuals.io)

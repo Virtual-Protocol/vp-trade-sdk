@@ -1,7 +1,10 @@
 import { ethers } from "ethers";
 import { ProviderManager } from "./core/provider";
 import { TransactionManager } from "./core/transaction";
-import VirtualApiManager from "./core/virtualProtocol";
+import VirtualApiManager, {
+  GetKlinesParams,
+  KLine,
+} from "./core/virtualProtocol";
 import { WalletManager } from "./core/wallet";
 import { CONFIG, PurchaseType, TokenType } from "./constant";
 import { Prototype, Sentient } from "./core/token";
@@ -322,6 +325,15 @@ export class SDKClient {
   }
 
   /**
+   * Fetch K-line (candlestick) data for a specific token
+   * @param params Parameters for the K-line data request
+   * @returns Array of KLine data
+   */
+  public async fetchKlines(params: GetKlinesParams): Promise<KLine[]> {
+    return this.virtualApiManager.fetchKlines(params);
+  }
+
+  /**
    * Validate a private key.
    * @param privateKey - The private key to validate
    */
@@ -370,3 +382,6 @@ export class SDKClient {
     }
   }
 }
+
+// Also export these types from SDKClient for external use
+export type { GetKlinesParams, KLine };

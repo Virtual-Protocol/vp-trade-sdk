@@ -36,6 +36,26 @@ interface VirtualApiConfig {
   apiUrl: string;
 }
 
+export interface KLine {
+  granularity: number; // K-line time granularity
+  tokenAddress: string; // Token address
+  open: string; // Price of the first trade
+  high: string; // Highest trade price
+  low: string; // Lowest trade price
+  close: string; // Price of the last trade
+  volume: string; // Total trading volume in $Virtual
+  startInMilli: number; // Start time in millisecond
+  endInMilli: number; // End time in millisecond
+}
+
+export interface GetKlinesParams {
+  tokenAddress: string; // Token address to get klines for
+  granularity: number; // Time granularity in seconds
+  start: number; // Start time in milliseconds (UTC)
+  end: number; // End time in milliseconds (UTC)
+  limit: number; // Maximum number of klines to return
+}
+
 class VirtualApiManager {
   private apiUrl: string;
 
@@ -52,9 +72,7 @@ class VirtualApiManager {
    * @param keyword The keyword to search for, can be token address, name or symbol
    * @returns The token data
    */
-  public async searchVirtualTokensByKeyword(
-    keyword: string
-  ): Promise<Token> {
+  public async searchVirtualTokensByKeyword(keyword: string): Promise<Token> {
     try {
       // Define the query parameters
       const queryParams = {
@@ -129,7 +147,7 @@ class VirtualApiManager {
   ): Promise<TokenList> {
     try {
       const queryParams = {
-        "filters[status]": '',
+        "filters[status]": "",
         "sort[0]": "totalValueLocked:desc",
         "sort[1]": "createdAt:desc",
         "populate[0]": "image",
@@ -139,9 +157,11 @@ class VirtualApiManager {
 
       // Set the status condition based on tokenAddress
       if (type === TokenType.SENTIENT) {
-        queryParams["filters[status]"] = FILTER_AGENT_STATUS.SENTIENT.toString();
+        queryParams["filters[status]"] =
+          FILTER_AGENT_STATUS.SENTIENT.toString();
       } else {
-        queryParams["filters[status]"] = FILTER_AGENT_STATUS.PROTOTYPE.toString();
+        queryParams["filters[status]"] =
+          FILTER_AGENT_STATUS.PROTOTYPE.toString();
       }
 
       // Use URLSearchParams to build the query string
@@ -159,33 +179,87 @@ class VirtualApiManager {
       }
 
       // Map the response data to match the TokenList structure
-      return { tokens: response.body.data.map((item: Token) => ({
-        id: item.id ?? 0,
-        name: item.name ?? "",
-        status: item.status ?? "",
-        tokenAddress: item.tokenAddress || item.preToken || "",
-        description: item.description ?? "",
-        lpAddress: item.lpAddress || item.preTokenPair || "",
-        symbol: item.symbol ?? "",
-        holderCount: item.holderCount ?? 0,
-        mcapInVirtual: item.mcapInVirtual ?? 0,
-        socials: {
-          VERIFIED_LINKS: {
-            TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? "",
-            TELEGRAM: item.socials?.VERIFIED_LINKS?.TELEGRAM ?? "",
+      return {
+        tokens: response.body.data.map((item: Token) => ({
+          id: item.id ?? 0,
+          name: item.name ?? "",
+          status: item.status ?? "",
+          tokenAddress: item.tokenAddress || item.preToken || "",
+          description: item.description ?? "",
+          lpAddress: item.lpAddress || item.preTokenPair || "",
+          symbol: item.symbol ?? "",
+          holderCount: item.holderCount ?? 0,
+          mcapInVirtual: item.mcapInVirtual ?? 0,
+          socials: {
+            VERIFIED_LINKS: {
+              TWITTER: item.socials?.VERIFIED_LINKS?.TWITTER ?? "",
+              TELEGRAM: item.socials?.VERIFIED_LINKS?.TELEGRAM ?? "",
+            },
           },
-        },
-        image: {
-          id: item.image?.id ?? 0,
-          url: item.image?.url ?? "",
-        },
-      })) };
+          image: {
+            id: item.image?.id ?? 0,
+            url: item.image?.url ?? "",
+          },
+        })),
+      };
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error
           ? error.message
           : "An unknown error occurred while fetching token lists.";
       throw new Error(`Error fetching token lists: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Fetch K-line (candlestick) data for a specific token
+   * @param params Parameters for the K-line data request
+   * @returns Array of KLine data
+   */
+  public async fetchKlines(params: GetKlinesParams): Promise<KLine[]> {
+    try {
+      const queryParams = {
+        tokenAddress: params.tokenAddress,
+        granularity: params.granularity.toString(),
+        start: params.start.toString(),
+        end: params.end.toString(),
+        limit: params.limit.toString(),
+      };
+
+      const queryString = new URLSearchParams(queryParams).toString();
+
+      const response = await needle(
+        "get",
+        `https://vp-api.virtuals.io/vp-api/klines?${queryString}`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
+
+      if (response.statusCode !== 200) {
+        throw new Error(
+          `Failed to fetch klines. Status code: ${response.statusCode}`
+        );
+      }
+
+      // Access the correct path in response data
+      return response.body.data.Klines.map((item: KLine) => ({
+        granularity: item.granularity,
+        tokenAddress: item.tokenAddress,
+        open: item.open,
+        high: item.high,
+        low: item.low,
+        close: item.close,
+        volume: item.volume,
+        startInMilli: item.startInMilli,
+        endInMilli: item.endInMilli,
+      }));
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred while fetching klines.";
+      throw new Error(`Error fetching klines: ${errorMessage}`);
     }
   }
 }

@@ -13,22 +13,40 @@ const sdkClient = new SDKClient(config);
 
 async function main() {
     try {
-        const pageNumber = 1;
-        const pageSize = 10;
+        // const pageNumber = 1;
+        // const pageSize = 10;
 
-        const sentientTokens = await sdkClient.getSentientListing(pageNumber, pageSize);
-        console.log('Sentient Tokens length:', sentientTokens.tokens.length);
-        const topSentienTokenAddress = sentientTokens.tokens[0].tokenAddress;
-        console.log('Highest Total Value Locked Sentient Token address:', topSentienTokenAddress);
-        const topSentientTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topSentienTokenAddress);
-        console.log('Highest Total Value Locked Sentient Token details:', topSentientTokenDetails);
+        // const sentientTokens = await sdkClient.getSentientListing(pageNumber, pageSize);
+        // console.log('Sentient Tokens length:', sentientTokens.tokens.length);
+        // const topSentienTokenAddress = sentientTokens.tokens[0].tokenAddress;
+        // console.log('Highest Total Value Locked Sentient Token address:', topSentienTokenAddress);
+        // const topSentientTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topSentienTokenAddress);
+        // console.log('Highest Total Value Locked Sentient Token details:', topSentientTokenDetails);
 
-        const prototypeTokens = await sdkClient.getPrototypeListing(pageNumber, pageSize);
-        console.log('Prototype Tokens length:', prototypeTokens.tokens.length);
-        const topPrototypeTokenAddress = prototypeTokens.tokens[0].tokenAddress;
-        console.log('Highest Total Value Locked Prototype Token address:', topPrototypeTokenAddress);
-        const topPrototypeTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topPrototypeTokenAddress);
-        console.log('Highest Total Value Locked Prototype Token details:', topPrototypeTokenDetails);
+        // const prototypeTokens = await sdkClient.getPrototypeListing(pageNumber, pageSize);
+        // console.log('Prototype Tokens length:', prototypeTokens.tokens.length);
+        // const topPrototypeTokenAddress = prototypeTokens.tokens[0].tokenAddress;
+        // console.log('Highest Total Value Locked Prototype Token address:', topPrototypeTokenAddress);
+        // const topPrototypeTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topPrototypeTokenAddress);
+        // console.log('Highest Total Value Locked Prototype Token details:', topPrototypeTokenDetails);
+
+        // Example: Fetch K-line data for prototype token only
+        try {
+            console.log("\n=== Example: Fetching K-line Data ===");
+            const klines = await sdkClient.fetchKlines({
+                tokenAddress: "0xD7D5e7660bfC99156afd87686D6e21E1bd36eDEE", // Dozzy prototype token address
+                granularity: 60, // 1 minute intervals
+                start: Date.now() - 1 * 60 * 60 * 1000, // 1 hour ago
+                end: Date.now(), // current time
+                limit: 1000,
+            });
+
+            console.log(`Successfully fetched ${klines.length} K-line records`);
+            console.log("First K-line data:", klines[0]);
+            console.log("Latest K-line data:", klines[klines.length - 1]);
+        } catch (error) {
+            console.error("Failed to fetch K-line data:", error);
+        }
 
         // exampleBuySentientToken();
         // exampleSellSentientToken();
