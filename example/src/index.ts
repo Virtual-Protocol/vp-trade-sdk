@@ -31,23 +31,7 @@ async function main() {
     const topPrototypeTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topPrototypeTokenAddress);
     console.log('Highest Total Value Locked Prototype Token details:', topPrototypeTokenDetails);
 
-    // Example: Fetch K-line data for prototype token only
-    try {
-      console.log("\n=== Example: Fetching K-line Data ===");
-      const klines = await sdkClient.fetchKlines({
-        tokenAddress: topPrototypeTokenAddress,
-        granularity: 60, // 1 minute intervals
-        start: Date.now() - 24 * 60 * 60 * 1000, // 1 hour ago
-        end: Date.now(), // current time
-        limit: 1000,
-      });
-
-      console.log(`Successfully fetched ${klines.length} K-line records`);
-      console.log("First K-line data:", klines[0]);
-      console.log("Latest K-line data:", klines[klines.length - 1]);
-    } catch (error) {
-      console.error("Failed to fetch K-line data:", error);
-    }
+    exampleFetchKlines(topPrototypeTokenAddress)
 
     // exampleBuySentientToken();
     // exampleSellSentientToken();
@@ -158,6 +142,26 @@ async function exampleSellPrototypeToken() {
     "prototype token sold successfully, amountToSell: ",
     amountToSell
   );
+}
+
+async function exampleFetchKlines(prototypeTokenAddress: string) {
+    // Example: Fetch K-line data for prototype token only
+    try {
+        console.log("\n=== Example: Fetching K-line Data ===");
+        const klines = await sdkClient.fetchKlines({
+            tokenAddress: prototypeTokenAddress,
+            granularity: 60, // 1 minute intervals
+            start: Date.now() - 24 * 60 * 60 * 1000, // 1 hour ago
+            end: Date.now(), // current time
+            limit: 1000,
+        });
+
+        console.log(`Successfully fetched ${klines.length} K-line records`);
+        console.log("First K-line data:", klines[0]);
+        console.log("Latest K-line data:", klines[klines.length - 1]);
+    } catch (error) {
+        console.error("Failed to fetch K-line data:", error);
+    }
 }
 
 // Call the main function to execute the example
