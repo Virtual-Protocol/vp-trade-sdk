@@ -150,7 +150,7 @@ class VirtualApiManager {
     try {
       const queryParams = {
         "filters[status]": "",
-        "sort[0]": "totalValueLocked:desc",
+        "sort[0]": "",
         "sort[1]": "createdAt:desc",
         "populate[0]": "image",
         "pagination[page]": page.toString(),
@@ -161,9 +161,11 @@ class VirtualApiManager {
       if (type === TokenType.SENTIENT) {
         queryParams["filters[status]"] =
           FILTER_AGENT_STATUS.SENTIENT.toString();
+        queryParams["sort[0]"] = "totalValueLocked:desc";
       } else if (type === TokenType.PROTOTYPE) {
         queryParams["filters[status]"] =
           FILTER_AGENT_STATUS.PROTOTYPE.toString();
+        queryParams["sort[0]"] = "virtualTokenValue:desc";
       }
 
       // Use URLSearchParams to build the query string
