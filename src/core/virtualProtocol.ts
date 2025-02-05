@@ -34,6 +34,7 @@ interface Token {
 
 interface VirtualApiConfig {
   apiUrl: string;
+  apiUrlV2: string;
 }
 
 export interface KLine {
@@ -58,13 +59,14 @@ export interface GetKlinesParams {
 
 class VirtualApiManager {
   private apiUrl: string;
-
+  private apiUrlV2: string;
   constructor(config: VirtualApiConfig) {
     if (!config.apiUrl) {
       throw new Error("Virtuals API URL cannot be empty");
     }
 
-    this.apiUrl = config.apiUrl;
+    this.apiUrl = config.apiUrl || "https://api.virtuals.io";
+    this.apiUrlV2 = config.apiUrlV2 || "https://vp-api.virtuals.io";
   }
 
   /**
@@ -92,7 +94,7 @@ class VirtualApiManager {
       const queryString = new URLSearchParams(queryParams).toString();
 
       // Make the GET request to Virtuals API
-      const response = await needle("get", `${this.apiUrl}?${queryString}`, {
+      const response = await needle("get", `${this.apiUrl}/api/virtuals?${queryString}`, {
         headers: { accept: "application/json" },
       });
 
@@ -159,7 +161,7 @@ class VirtualApiManager {
       if (type === TokenType.SENTIENT) {
         queryParams["filters[status]"] =
           FILTER_AGENT_STATUS.SENTIENT.toString();
-      } else {
+      } else if (type === TokenType.PROTOTYPE) {
         queryParams["filters[status]"] =
           FILTER_AGENT_STATUS.PROTOTYPE.toString();
       }
@@ -168,7 +170,7 @@ class VirtualApiManager {
       const queryString = new URLSearchParams(queryParams).toString();
 
       // Make the GET request to Virtuals API
-      const response = await needle("get", `${this.apiUrl}?${queryString}`, {
+      const response = await needle("get", `${this.apiUrl}/api/virtuals?${queryString}`, {
         headers: { accept: "application/json" },
       });
 
@@ -230,7 +232,7 @@ class VirtualApiManager {
 
       const response = await needle(
         "get",
-        `https://vp-api.virtuals.io/vp-api/klines?${queryString}`,
+        `${this.apiUrlV2}/vp-api/klines?${queryString}`,
         {
           headers: { accept: "application/json" },
         }

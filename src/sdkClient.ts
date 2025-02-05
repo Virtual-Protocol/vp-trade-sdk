@@ -12,8 +12,9 @@ import { Prototype, Sentient } from "./core/token";
 export interface ClientConfig {
   privateKey: string;
   rpcUrl: string;
-  apiKey: string;
+  rpcApiKey: string;
   virtualApiUrl: string;
+  virtualApiUrlV2: string;
 }
 
 export interface TokenList {
@@ -66,7 +67,7 @@ export class SDKClient {
     // Validate the private key
     const provider = ProviderManager.getInstance({
       rpcUrl: config.rpcUrl,
-      apiKey: config.apiKey,
+      apiKey: config.rpcApiKey,
     });
     this.wallet = WalletManager.getInstance({
       privateKey: config.privateKey,
@@ -74,6 +75,7 @@ export class SDKClient {
     });
     this.virtualApiManager = new VirtualApiManager({
       apiUrl: config.virtualApiUrl,
+      apiUrlV2: config.virtualApiUrlV2,
     });
     this.prototype = new Prototype(
       this.wallet.getWallet(),
