@@ -67,7 +67,7 @@ export class SDKClient {
     // Validate the private key
     const provider = ProviderManager.getInstance({
       rpcUrl: config.rpcUrl,
-      apiKey: config.rpcApiKey,
+      rpcApiKey: config.rpcApiKey,
     });
     this.wallet = WalletManager.getInstance({
       privateKey: config.privateKey,
