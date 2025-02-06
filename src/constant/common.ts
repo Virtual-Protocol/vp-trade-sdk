@@ -18,7 +18,6 @@ export const CONFIG = {
 };
 
 export const FILTER_AGENT_STATUS = {
-    DRAFT: 0,
     PROTOTYPE: 1,
     SENTIENT: 2,
     SEARCH: 3,
