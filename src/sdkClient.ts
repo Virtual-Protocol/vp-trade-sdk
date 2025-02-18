@@ -3,7 +3,9 @@ import { ProviderManager } from "./core/provider";
 import { TransactionManager } from "./core/transaction";
 import VirtualApiManager, {
   GetKlinesParams,
+  GetLatestTradesParams,
   KLine,
+  Trade,
 } from "./core/virtualProtocol";
 import { WalletManager } from "./core/wallet";
 import { AGENT_CHAIN_ID, CONFIG, PurchaseType, TokenType } from "./constant";
@@ -340,6 +342,17 @@ export class SDKClient {
    */
   public async fetchKlines(params: GetKlinesParams): Promise<KLine[]> {
     return this.virtualApiManager.fetchKlines(params);
+  }
+
+  /**
+   * Fetch latest trades for a specific token
+   * @param params Parameters for the latest trades data request
+   * @returns Array of Trade data
+   */
+  public async fetchLatestTrades(
+    params: GetLatestTradesParams
+  ): Promise<Trade[]> {
+    return this.virtualApiManager.fetchLatestTrades(params);
   }
 
   /**

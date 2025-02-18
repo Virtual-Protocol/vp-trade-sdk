@@ -1,6 +1,7 @@
 import { SDKClient } from "vp-trade-sdk/sdkClient";
 import dotenv from "dotenv";
 import { AGENT_CHAIN_ID, KLINE_CHAIN_ID } from "vp-trade-sdk/constant";
+import { Trade } from "vp-trade-sdk/core/virtualProtocol";
 dotenv.config();
 
 const config = {
@@ -96,6 +97,27 @@ async function main() {
       solanaPrototypeTokens.tokens[0].tokenAddress,
       KLINE_CHAIN_ID.SOLANA
     );
+
+    const baseTrades = await exampleFetchLatestTrades(
+      basePrototypeTokens.tokens[0].tokenAddress,
+      KLINE_CHAIN_ID.BASE
+    );
+    await exampleFetchLatestTrades(
+      solanaPrototypeTokens.tokens[0].tokenAddress,
+      KLINE_CHAIN_ID.SOLANA
+    );
+    if (baseTrades.length) {
+      // Example fetching trades of a specific sender address
+      console.log(
+        "Fetching trades of a specific sender address",
+        baseTrades?.[0]?.txSender
+      );
+      await exampleFetchLatestTrades(
+        topPrototypeTokenAddress,
+        KLINE_CHAIN_ID.BASE,
+        baseTrades?.[0]?.txSender
+      );
+    }
 
     // exampleBuySentientToken();
     // exampleSellSentientToken();
@@ -229,6 +251,32 @@ async function exampleFetchKlines(
     console.log("Latest K-line data:", klines[klines.length - 1]);
   } catch (error) {
     console.error("Failed to fetch K-line data:", error);
+  }
+}
+
+async function exampleFetchLatestTrades(
+  prototypeTokenAddress: string,
+  chainId: KLINE_CHAIN_ID,
+  txSender?: string
+): Promise<Trade[]> {
+  // Example: Fetch K-line data for prototype token only
+  try {
+    console.log("\n=== Example: Fetching Latest Trades ===");
+    const trades = await sdkClient.fetchLatestTrades({
+      tokenAddress: prototypeTokenAddress,
+      limit: 1000,
+      chainId: chainId,
+      txSender: txSender,
+    });
+
+    console.log(`Successfully fetched ${trades.length} trades`);
+    console.log("Latest trade data:", trades[0]);
+    console.log("Oldest trade data:", trades[trades.length - 1]);
+
+    return trades;
+  } catch (error) {
+    console.error("Failed to fetch latest trades:", error);
+    return [];
   }
 }
 
