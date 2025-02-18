@@ -16,21 +16,20 @@ npm install
 - check and update `/example/src/index.ts` file
 - `npm run start`
 
-
 ### 2. Other Examples
 
 #### Get Wallet Address
 
 ```javascript
 const walletAddress = sdkClient.getAddress();
-console.log('Wallet Address:', walletAddress);
+console.log("Wallet Address:", walletAddress);
 ```
 
 #### Sign a Message
 
 ```javascript
-const signedMessage = await sdkClient.signMessage('Hello, blockchain!');
-console.log('Signed Message:', signedMessage);
+const signedMessage = await sdkClient.signMessage("Hello, blockchain!");
+console.log("Signed Message:", signedMessage);
 ```
 
 ## Methods
@@ -51,14 +50,16 @@ console.log('Signed Message:', signedMessage);
 
 ### Token Listing
 
-- `getSentientListing(pageNumber?: number, pageSize?: number)`: Get Sentient token listings
-- `getPrototypeListing(pageNumber?: number, pageSize?: number)`: Get Prototype token listings
+- `getSentientListing(pageNumber?: number, pageSize?: number, chainId?: AGENT_CHAIN_ID)`: Get Sentient token listings
+- `getPrototypeListing(pageNumber?: number, pageSize?: number, chainId?: AGENT_CHAIN_ID)`: Get Prototype token listings
 - `searchVirtualTokensByKeyword(tokenAddress: string)`: Fetch token details by address
 
 ### K-line Data
+
 - `fetchKlines(params: GetKlinesParams)`: Fetch K-line data
 
 ## Builder Fee
+
 If you are using this SDK for getting builder fee, please contact us at [matthew@virtuals.io](mailto:matthew@virtuals.io) or [victorng@virtuals.io](mailto:victorng@virtuals.io)
 
 ## License

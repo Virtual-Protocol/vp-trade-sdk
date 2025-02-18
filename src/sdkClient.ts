@@ -6,7 +6,7 @@ import VirtualApiManager, {
   KLine,
 } from "./core/virtualProtocol";
 import { WalletManager } from "./core/wallet";
-import { CONFIG, PurchaseType, TokenType } from "./constant";
+import { AGENT_CHAIN_ID, CONFIG, PurchaseType, TokenType } from "./constant";
 import { Prototype, Sentient } from "./core/token";
 
 export interface ClientConfig {
@@ -46,6 +46,7 @@ export interface Token {
     id: number; // ID of the image resource
     url: string; // URL of the image (e.g., the token's logo)
   };
+  chain: string; // Chain of the token
 }
 
 export class SDKClient {
@@ -287,14 +288,17 @@ export class SDKClient {
    * Get a List of Sentient Tokens sorted by highest total value locked
    * @param pageNumber Page number for pagination, default value is 1
    * @param pageSize Page size for pagination, default value is 30
+   * @param agentChainId Chain ID of the agent, default value is AGENT_CHAIN_ID.ALL
    * @returns Token list data
    */
   public async getSentientListing(
     pageNumber: number = 1,
-    pageSize: number = 30
+    pageSize: number = 30,
+    agentChainId: AGENT_CHAIN_ID = AGENT_CHAIN_ID.ALL
   ): Promise<TokenList> {
     return await this.virtualApiManager.fetchVirtualTokenLists(
       TokenType.SENTIENT,
+      agentChainId,
       pageNumber,
       pageSize
     );
@@ -304,14 +308,17 @@ export class SDKClient {
    * Get a List of Prototype Tokens sorted by highest total value locked
    * @param pageNumber Page number for pagination, default value is 1
    * @param pageSize Page size for pagination, default value is 30
+   * @param agentChainId Chain ID of the agent, default value is AGENT_CHAIN_ID.ALL
    * @returns Token list data
    */
   public async getPrototypeListing(
     pageNumber: number = 1,
-    pageSize: number = 30
+    pageSize: number = 30,
+    agentChainId: AGENT_CHAIN_ID = AGENT_CHAIN_ID.ALL
   ): Promise<TokenList> {
     return await this.virtualApiManager.fetchVirtualTokenLists(
       TokenType.PROTOTYPE,
+      agentChainId,
       pageNumber,
       pageSize
     );
