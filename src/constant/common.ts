@@ -33,3 +33,7 @@ export const AGENT_CHAIN_MAP = {
   [AGENT_CHAIN_ID.BASE]: "BASE",
   [AGENT_CHAIN_ID.SOLANA]: "SOLANA",
 };
+export enum KLINE_CHAIN_ID {
+  BASE = 0,
+  SOLANA = 1,
+}
