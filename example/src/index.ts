@@ -259,7 +259,7 @@ async function exampleFetchLatestTrades(
   chainId: KLINE_CHAIN_ID,
   txSender?: string
 ): Promise<Trade[]> {
-  // Example: Fetch K-line data for prototype token only
+  // Example: Fetch trade data for prototype token only
   try {
     console.log("\n=== Example: Fetching Latest Trades ===");
     const trades = await sdkClient.fetchLatestTrades({
