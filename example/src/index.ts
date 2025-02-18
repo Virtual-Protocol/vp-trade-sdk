@@ -52,6 +52,16 @@ async function main() {
       "Highest Total Value Locked Sentient Token details:",
       topSentientTokenDetails
     );
+    console.log(
+      "Highest Total Value Locked Sentient Token address:",
+      topSentienTokenAddress
+    );
+    const topSentientTokenDetails =
+      await sdkClient.searchVirtualTokensByKeyword(topSentienTokenAddress);
+    console.log(
+      "Highest Total Value Locked Sentient Token details:",
+      topSentientTokenDetails
+    );
 
     const prototypeTokens = await sdkClient.getPrototypeListing(
       pageNumber,
@@ -77,6 +87,16 @@ async function main() {
       solanaPrototypeTokens.tokens.length
     );
     const topPrototypeTokenAddress = prototypeTokens.tokens[0].tokenAddress;
+    console.log(
+      "Highest Total Value Locked Prototype Token address:",
+      topPrototypeTokenAddress
+    );
+    const topPrototypeTokenDetails =
+      await sdkClient.searchVirtualTokensByKeyword(topPrototypeTokenAddress);
+    console.log(
+      "Highest Total Value Locked Prototype Token details:",
+      topPrototypeTokenDetails
+    );
     console.log(
       "Highest Total Value Locked Prototype Token address:",
       topPrototypeTokenAddress
@@ -213,6 +233,12 @@ async function exampleFetchKlines(prototypeTokenAddress: string) {
       limit: 1000,
     });
 
+    console.log(`Successfully fetched ${klines.length} K-line records`);
+    console.log("First K-line data:", klines[0]);
+    console.log("Latest K-line data:", klines[klines.length - 1]);
+  } catch (error) {
+    console.error("Failed to fetch K-line data:", error);
+  }
     console.log(`Successfully fetched ${klines.length} K-line records`);
     console.log("First K-line data:", klines[0]);
     console.log("Latest K-line data:", klines[klines.length - 1]);

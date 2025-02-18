@@ -4,6 +4,7 @@ import {
   AGENT_CHAIN_ID,
   AGENT_CHAIN_MAP,
   FILTER_AGENT_STATUS,
+  KLINE_CHAIN_ID,
   TokenType,
 } from "./../constant";
 
@@ -61,6 +62,7 @@ export interface GetKlinesParams {
   start: number; // Start time in milliseconds (UTC)
   end: number; // End time in milliseconds (UTC)
   limit: number; // Maximum number of klines to return
+  chainId?: KLINE_CHAIN_ID; // Chain ID
 }
 
 class VirtualApiManager {
@@ -249,6 +251,7 @@ class VirtualApiManager {
         start: params.start.toString(),
         end: params.end.toString(),
         limit: params.limit.toString(),
+        chainID: (params.chainId ?? KLINE_CHAIN_ID.BASE).toString(),
       };
 
       const queryString = new URLSearchParams(queryParams).toString();
