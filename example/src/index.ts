@@ -1,6 +1,6 @@
 import { SDKClient } from "vp-trade-sdk/sdkClient";
 import dotenv from "dotenv";
-import { AGENT_CHAIN_ID } from "vp-trade-sdk/constant";
+import { AGENT_CHAIN_ID, KLINE_CHAIN_ID } from "vp-trade-sdk/constant";
 dotenv.config();
 
 const config = {
@@ -32,26 +32,16 @@ async function main() {
       "Base Sentient Tokens length:",
       baseSentientTokens.tokens.length
     );
-    const solanSentientTokens = await sdkClient.getSentientListing(
+    const solanaSentientTokens = await sdkClient.getSentientListing(
       pageNumber,
       pageSize,
       AGENT_CHAIN_ID.SOLANA
     );
     console.log(
       "Solana Sentient Tokens length:",
-      solanSentientTokens.tokens.length
+      solanaSentientTokens.tokens.length
     );
     const topSentienTokenAddress = sentientTokens.tokens[0].tokenAddress;
-    console.log(
-      "Highest Total Value Locked Sentient Token address:",
-      topSentienTokenAddress
-    );
-    const topSentientTokenDetails =
-      await sdkClient.searchVirtualTokensByKeyword(topSentienTokenAddress);
-    console.log(
-      "Highest Total Value Locked Sentient Token details:",
-      topSentientTokenDetails
-    );
     console.log(
       "Highest Total Value Locked Sentient Token address:",
       topSentienTokenAddress
@@ -97,18 +87,15 @@ async function main() {
       "Highest Total Value Locked Prototype Token details:",
       topPrototypeTokenDetails
     );
-    console.log(
-      "Highest Total Value Locked Prototype Token address:",
-      topPrototypeTokenAddress
-    );
-    const topPrototypeTokenDetails =
-      await sdkClient.searchVirtualTokensByKeyword(topPrototypeTokenAddress);
-    console.log(
-      "Highest Total Value Locked Prototype Token details:",
-      topPrototypeTokenDetails
-    );
 
-    exampleFetchKlines(topPrototypeTokenAddress);
+    await exampleFetchKlines(
+      basePrototypeTokens.tokens[0].tokenAddress,
+      KLINE_CHAIN_ID.BASE
+    );
+    await exampleFetchKlines(
+      solanaPrototypeTokens.tokens[0].tokenAddress,
+      KLINE_CHAIN_ID.SOLANA
+    );
 
     // exampleBuySentientToken();
     // exampleSellSentientToken();
@@ -221,7 +208,10 @@ async function exampleSellPrototypeToken() {
   );
 }
 
-async function exampleFetchKlines(prototypeTokenAddress: string) {
+async function exampleFetchKlines(
+  prototypeTokenAddress: string,
+  chainId: KLINE_CHAIN_ID
+) {
   // Example: Fetch K-line data for prototype token only
   try {
     console.log("\n=== Example: Fetching K-line Data ===");
@@ -231,14 +221,9 @@ async function exampleFetchKlines(prototypeTokenAddress: string) {
       start: Date.now() - 24 * 60 * 60 * 1000, // 1 hour ago
       end: Date.now(), // current time
       limit: 1000,
+      chainId: chainId,
     });
 
-    console.log(`Successfully fetched ${klines.length} K-line records`);
-    console.log("First K-line data:", klines[0]);
-    console.log("Latest K-line data:", klines[klines.length - 1]);
-  } catch (error) {
-    console.error("Failed to fetch K-line data:", error);
-  }
     console.log(`Successfully fetched ${klines.length} K-line records`);
     console.log("First K-line data:", klines[0]);
     console.log("Latest K-line data:", klines[klines.length - 1]);
