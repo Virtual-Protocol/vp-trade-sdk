@@ -58,6 +58,10 @@ console.log("Signed Message:", signedMessage);
 
 - `fetchKlines(params: GetKlinesParams)`: Fetch K-line data
 
+### Trade Data
+
+- `fetchLatestTrades(params: GetLatestTradesParams)`: Fetch latest trades data
+
 ## Builder Fee
 
 If you are using this SDK for getting builder fee, please contact us at [matthew@virtuals.io](mailto:matthew@virtuals.io) or [victorng@virtuals.io](mailto:victorng@virtuals.io)
