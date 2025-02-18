@@ -1,6 +1,11 @@
 import dotenv from "dotenv";
 import needle from "needle";
-import { FILTER_AGENT_STATUS, TokenType } from "./../constant";
+import {
+  AGENT_CHAIN_ID,
+  AGENT_CHAIN_MAP,
+  FILTER_AGENT_STATUS,
+  TokenType,
+} from "./../constant";
 
 dotenv.config();
 
@@ -30,6 +35,7 @@ interface Token {
     id: number; // ID of the image resource
     url: string; // URL of the image (e.g., the token's logo)
   };
+  chain: string; // Chain of the token
 }
 
 interface VirtualApiConfig {
@@ -94,9 +100,13 @@ class VirtualApiManager {
       const queryString = new URLSearchParams(queryParams).toString();
 
       // Make the GET request to Virtuals API
-      const response = await needle("get", `${this.apiUrl}/api/virtuals?${queryString}`, {
-        headers: { accept: "application/json" },
-      });
+      const response = await needle(
+        "get",
+        `${this.apiUrl}/api/virtuals?${queryString}`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
 
       if (response.statusCode !== 200) {
         throw new Error(
@@ -125,6 +135,7 @@ class VirtualApiManager {
           id: item.image?.id ?? 0,
           url: item.image?.url ?? "",
         },
+        chain: item.chain ?? "",
       }))[0];
     } catch (error: unknown) {
       const errorMessage =
@@ -144,11 +155,12 @@ class VirtualApiManager {
    */
   public async fetchVirtualTokenLists(
     type: string,
+    agentChainId: AGENT_CHAIN_ID,
     page: number,
     pageSize: number
   ): Promise<TokenList> {
     try {
-      const queryParams = {
+      const queryParams: { [key: string]: string } = {
         "filters[status]": "",
         "sort[0]": "",
         "sort[1]": "createdAt:desc",
@@ -168,13 +180,21 @@ class VirtualApiManager {
         queryParams["sort[0]"] = "virtualTokenValue:desc";
       }
 
+      if (agentChainId !== AGENT_CHAIN_ID.ALL) {
+        queryParams["filters[chain]"] = AGENT_CHAIN_MAP[agentChainId];
+      }
+
       // Use URLSearchParams to build the query string
       const queryString = new URLSearchParams(queryParams).toString();
 
       // Make the GET request to Virtuals API
-      const response = await needle("get", `${this.apiUrl}/api/virtuals?${queryString}`, {
-        headers: { accept: "application/json" },
-      });
+      const response = await needle(
+        "get",
+        `${this.apiUrl}/api/virtuals?${queryString}`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
 
       if (response.statusCode !== 200) {
         throw new Error(
@@ -204,6 +224,7 @@ class VirtualApiManager {
             id: item.image?.id ?? 0,
             url: item.image?.url ?? "",
           },
+          chain: item.chain ?? "",
         })),
       };
     } catch (error: unknown) {
