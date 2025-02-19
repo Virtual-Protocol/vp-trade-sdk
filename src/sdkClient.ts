@@ -10,6 +10,11 @@ import VirtualApiManager, {
 import { WalletManager } from "./core/wallet";
 import { AGENT_CHAIN_ID, CONFIG, PurchaseType, TokenType } from "./constant";
 import { Prototype, Sentient } from "./core/token";
+import {
+  GetQuoteConfig,
+  SolanaTransactionManager,
+} from "./core/solanaTransaction";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export interface ClientConfig {
   privateKey: string;
@@ -17,6 +22,9 @@ export interface ClientConfig {
   rpcApiKey: string;
   virtualApiUrl: string;
   virtualApiUrlV2: string;
+  solanaPrivateKey?: string;
+  solanaRpcUrl?: string;
+  solanaJupiterApiKey?: string;
 }
 
 export interface TokenList {
@@ -54,6 +62,7 @@ export interface Token {
 export class SDKClient {
   private transactionManager: TransactionManager;
   private virtualApiManager: VirtualApiManager;
+  private solanaTransactionManager?: SolanaTransactionManager;
   private wallet: WalletManager;
   private prototype: Prototype;
   private sentient: Sentient;
@@ -95,6 +104,15 @@ export class SDKClient {
       this.prototype,
       this.sentient
     );
+    if (!!config.solanaPrivateKey) {
+      this.solanaTransactionManager = new SolanaTransactionManager(
+        config.solanaPrivateKey,
+        {
+          rpcUrl: config.solanaRpcUrl,
+          jupiterApiKey: config.solanaJupiterApiKey,
+        }
+      );
+    }
   }
 
   /**
@@ -116,23 +134,41 @@ export class SDKClient {
    * Buy Sentient tokens from Virtuals
    * @param tokenAddress Sentient Token buy from Virtuals
    * @param amount Amount of Virtuals to buy Sentient tokens
-   * @param builderID
-   * @returns ethers.TransactionReceipt
+   * @param option Additional options for the transaction
+   * @param agentChainId Chain ID of the agent, accepted value is AGENT_CHAIN_ID.BASE | AGENT_CHAIN_ID.SOLANA
+   * @returns ethers.TransactionReceipt | Transaction Signature
    */
   public async buySentientTokens(
     tokenAddress: string,
     amount: string,
-    builderID?: number
-  ): Promise<ethers.TransactionReceipt> {
-    const from = CONFIG.VIRTUALS_TOKEN_ADDR;
+    option?: Option,
+    agentChainId:
+      | AGENT_CHAIN_ID.BASE
+      | AGENT_CHAIN_ID.SOLANA = AGENT_CHAIN_ID.BASE
+  ): Promise<ethers.TransactionReceipt | string> {
+    const from =
+      agentChainId === AGENT_CHAIN_ID.SOLANA
+        ? CONFIG.SOLANA_VIRTUALS_TOKEN_ADDR
+        : CONFIG.VIRTUALS_TOKEN_ADDR;
     const to = tokenAddress;
+
+    if (agentChainId === AGENT_CHAIN_ID.SOLANA) {
+      const signature = await this.swapSolanaTokens({
+        inputMint: from,
+        outputMint: to,
+        amount: +amount,
+        slippageBps: option?.slippage ?? 100, // 100 bps = 1%
+        lamportUnit: LAMPORTS_PER_SOL,
+      });
+      return signature;
+    }
 
     // send transaction
     const txResponse = await this.transactionManager.sendSentientTransaction(
       from,
       to,
       amount,
-      { builderID }
+      { builderID: option?.builderID }
     );
 
     // return transaction receipt
@@ -143,23 +179,41 @@ export class SDKClient {
    * Sell Sentient tokens to Virtuals
    * @param tokenAddress Sentient token to sell to Virtuals
    * @param amount Amount of Sentient tokens to sell
-   * @param builderID
-   * @returns ethers.TransactionReceipt
+   * @param option Additional options for the transaction
+   * @param agentChainId Chain ID of the agent, accepted value is AGENT_CHAIN_ID.BASE | AGENT_CHAIN_ID.SOLANA
+   * @returns ethers.TransactionReceipt | Transaction Signature
    */
   public async sellSentientTokens(
     tokenAddress: string,
     amount: string,
-    builderID?: number
-  ): Promise<ethers.TransactionReceipt> {
+    option?: Option,
+    agentChainId:
+      | AGENT_CHAIN_ID.BASE
+      | AGENT_CHAIN_ID.SOLANA = AGENT_CHAIN_ID.BASE
+  ): Promise<ethers.TransactionReceipt | string> {
     const from = tokenAddress;
-    const to = CONFIG.VIRTUALS_TOKEN_ADDR;
+    const to =
+      agentChainId === AGENT_CHAIN_ID.SOLANA
+        ? CONFIG.SOLANA_VIRTUALS_TOKEN_ADDR
+        : CONFIG.VIRTUALS_TOKEN_ADDR;
+
+    if (agentChainId === AGENT_CHAIN_ID.SOLANA) {
+      const signature = await this.swapSolanaTokens({
+        inputMint: from,
+        outputMint: to,
+        amount: +amount,
+        slippageBps: option?.slippage ?? 100, // 100 bps = 1%
+        lamportUnit: 1e6,
+      });
+      return signature;
+    }
 
     // send transaction
     const txResponse = await this.transactionManager.sendSentientTransaction(
       from,
       to,
       amount,
-      { builderID }
+      { builderID: option?.builderID }
     );
 
     // return transaction receipt
@@ -170,16 +224,34 @@ export class SDKClient {
    * Buy Prototype tokens from Virtuals
    * @param tokenAddress Prototype Token buy from Virtuals
    * @param amount Amount of Virtuals to buy Prototype tokens
-   * @param builderID
-   * @returns ethers.TransactionReceipt
+   * @param option Additional options for the transaction
+   * @param agentChainId Chain ID of the agent, accepted value is AGENT_CHAIN_ID.BASE | AGENT_CHAIN_ID.SOLANA
+   * @returns ethers.TransactionReceipt | Transaction Signature
    */
   public async buyPrototypeTokens(
     tokenAddress: string,
     amount: string,
-    option?: Option
-  ): Promise<ethers.TransactionReceipt> {
-    const from = CONFIG.VIRTUALS_TOKEN_ADDR;
+    option?: Option,
+    agentChainId:
+      | AGENT_CHAIN_ID.BASE
+      | AGENT_CHAIN_ID.SOLANA = AGENT_CHAIN_ID.BASE
+  ): Promise<ethers.TransactionReceipt | string> {
+    const from =
+      agentChainId === AGENT_CHAIN_ID.SOLANA
+        ? CONFIG.SOLANA_VIRTUALS_TOKEN_ADDR
+        : CONFIG.VIRTUALS_TOKEN_ADDR;
     const to = tokenAddress;
+
+    if (agentChainId === AGENT_CHAIN_ID.SOLANA) {
+      const signature = await this.swapSolanaTokens({
+        inputMint: from,
+        outputMint: to,
+        amount: +amount,
+        slippageBps: option?.slippage ?? 100, // 100 bps = 1%
+        lamportUnit: LAMPORTS_PER_SOL,
+      });
+      return signature;
+    }
 
     // send transaction
     const txResponse = await this.transactionManager.sendPrototypeTransaction(
@@ -198,16 +270,34 @@ export class SDKClient {
    * Sell Prototype tokens to Virtuals
    * @param tokenAddress Prototype Token sell to Virtuals
    * @param amount Amount of Prototype tokens to sell
-   * @param builderID
-   * @returns ethers.TransactionReceipt
+   * @param option Additional options for the transaction
+   * @param agentChainId Chain ID of the agent, accepted value is AGENT_CHAIN_ID.BASE | AGENT_CHAIN_ID.SOLANA
+   * @returns ethers.TransactionReceipt | Transaction Signature
    */
   public async sellPrototypeTokens(
     tokenAddress: string,
     amount: string,
-    option?: Option
-  ): Promise<ethers.TransactionReceipt> {
+    option?: Option,
+    agentChainId:
+      | AGENT_CHAIN_ID.BASE
+      | AGENT_CHAIN_ID.SOLANA = AGENT_CHAIN_ID.BASE
+  ): Promise<ethers.TransactionReceipt | string> {
     const from = tokenAddress;
-    const to = CONFIG.VIRTUALS_TOKEN_ADDR;
+    const to =
+      agentChainId === AGENT_CHAIN_ID.SOLANA
+        ? CONFIG.SOLANA_VIRTUALS_TOKEN_ADDR
+        : CONFIG.VIRTUALS_TOKEN_ADDR;
+
+    if (agentChainId === AGENT_CHAIN_ID.SOLANA) {
+      const signature = await this.swapSolanaTokens({
+        inputMint: from,
+        outputMint: to,
+        amount: +amount,
+        slippageBps: option?.slippage ?? 100, // 100 bps = 1%
+        lamportUnit: 1e6,
+      });
+      return signature;
+    }
 
     // send transaction
     const txResponse = await this.transactionManager.sendPrototypeTransaction(
@@ -397,11 +487,21 @@ export class SDKClient {
         throw new Error("Transaction receipt is null.");
       }
 
-      console.log("Transaction receipt:", txReceipt);
       return txReceipt;
     } catch (error) {
       throw new Error(`Failed to wait for transaction receipt: ${error}`);
     }
+  }
+
+  /**
+   * Swap any 2 tokens on Solana
+   * @param config GetQuoteConfig
+   * @returns Transaction Signature
+   */
+  public async swapSolanaTokens(config: GetQuoteConfig): Promise<string> {
+    if (!this.solanaTransactionManager)
+      throw new Error("Invalid SOLANA wallet private key");
+    return await this.solanaTransactionManager.swap(config);
   }
 }
 
