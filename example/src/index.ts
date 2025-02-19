@@ -1,6 +1,6 @@
 import { SDKClient } from "vp-trade-sdk/sdkClient";
 import dotenv from "dotenv";
-import { AGENT_CHAIN_ID, KLINE_CHAIN_ID } from "vp-trade-sdk/constant";
+import { AGENT_CHAIN_ID, CONFIG, KLINE_CHAIN_ID } from "vp-trade-sdk/constant";
 import { Trade } from "vp-trade-sdk/core/virtualProtocol";
 dotenv.config();
 
@@ -10,15 +10,16 @@ const config = {
   rpcApiKey: process.env.RPC_API_KEY || "",
   virtualApiUrl: process.env.VIRTUALS_API_URL || "",
   virtualApiUrlV2: process.env.VIRTUALS_API_URL_V2 || "",
+  solanaPrivateKey: process.env.SOLANA_PRIVATE_KEY || "",
+  solanaRpcUrl: process.env.SOLANA_RPC_URL || "",
+  solanaJupiterApiKey: process.env.SOLANA_JUPITER_API_KEY || "",
 };
 
 const sdkClient = new SDKClient(config);
-
 async function main() {
   try {
     const pageNumber = 1;
     const pageSize = 10;
-
     const sentientTokens = await sdkClient.getSentientListing(
       pageNumber,
       pageSize
@@ -53,7 +54,6 @@ async function main() {
       "Highest Total Value Locked Sentient Token details:",
       topSentientTokenDetails
     );
-
     const prototypeTokens = await sdkClient.getPrototypeListing(
       pageNumber,
       pageSize
@@ -88,7 +88,6 @@ async function main() {
       "Highest Total Value Locked Prototype Token details:",
       topPrototypeTokenDetails
     );
-
     await exampleFetchKlines(
       basePrototypeTokens.tokens[0].tokenAddress,
       KLINE_CHAIN_ID.BASE
@@ -97,7 +96,6 @@ async function main() {
       solanaPrototypeTokens.tokens[0].tokenAddress,
       KLINE_CHAIN_ID.SOLANA
     );
-
     const baseTrades = await exampleFetchLatestTrades(
       basePrototypeTokens.tokens[0].tokenAddress,
       KLINE_CHAIN_ID.BASE
@@ -118,11 +116,15 @@ async function main() {
         baseTrades?.[0]?.txSender
       );
     }
-
-    // exampleBuySentientToken();
-    // exampleSellSentientToken();
-    // exampleBuyPrototypeToken();
-    // exampleSellPrototypeToken();
+    // await exampleBuySentientToken();
+    // await exampleSellSentientToken();
+    // await exampleBuyPrototypeToken();
+    // await exampleSellPrototypeToken();
+    // await exampleSwapSolanaTokens();
+    // await exampleBuySolanaSentientToken();
+    // await exampleSellSolanaSentientToken();
+    // await exampleBuySolanaPrototypeToken();
+    // await exampleSellSolanaPrototypeToken();
   } catch (error) {
     // Handle any errors
     if (error instanceof Error) {
@@ -278,6 +280,80 @@ async function exampleFetchLatestTrades(
     console.error("Failed to fetch latest trades:", error);
     return [];
   }
+}
+
+async function exampleSwapSolanaTokens() {
+  // Swap any 2 tokens (More configurations available)
+  // Example provided is 0.0001 SOL to VIRTUALS, slippage is 100 bps (1%)
+  // Highly recommended to use own SOLANA RPC to increase the speed and success rate of the transaction
+  const signature = await sdkClient.swapSolanaTokens({
+    inputMint: "So11111111111111111111111111111111111111112",
+    outputMint: CONFIG.SOLANA_VIRTUALS_TOKEN_ADDR,
+    amount: 0.0001,
+    slippageBps: 100,
+  });
+  console.log(
+    "Swap Solana Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
+}
+
+async function exampleBuySolanaSentientToken() {
+  const signature = await sdkClient.buySentientTokens(
+    "C1nzFL2DD3Wqc3dzRbsrpb6tiZ6dbYsXubjVtzyHvirt", // TracyAI token address
+    "0.0001",
+    undefined,
+    AGENT_CHAIN_ID.SOLANA
+  );
+  console.log(
+    "Buy Solana Sentient Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
+}
+
+async function exampleSellSolanaSentientToken() {
+  const signature = await sdkClient.sellSentientTokens(
+    "C1nzFL2DD3Wqc3dzRbsrpb6tiZ6dbYsXubjVtzyHvirt", // TracyAI token address
+    "0.00001",
+    {
+      slippage: 200, // 2% slippage
+    },
+    AGENT_CHAIN_ID.SOLANA
+  );
+  console.log(
+    "Sell Solana Sentient Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
+}
+
+async function exampleBuySolanaPrototypeToken() {
+  const signature = await sdkClient.buyPrototypeTokens(
+    "GABU7ezujrMejFU7AcNep14dkr1yFM7RWWtYfcJJvirt", // $PAT token address
+    "0.0001",
+    {
+      slippage: 200, // 2% slippage
+    },
+    AGENT_CHAIN_ID.SOLANA
+  );
+  console.log(
+    "Buy Solana Prototype Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
+}
+
+async function exampleSellSolanaPrototypeToken() {
+  const signature = await sdkClient.sellPrototypeTokens(
+    "GABU7ezujrMejFU7AcNep14dkr1yFM7RWWtYfcJJvirt", // $PAT token address
+    "0.0001",
+    {
+      slippage: 200, // 2% slippage
+    },
+    AGENT_CHAIN_ID.SOLANA
+  );
+  console.log(
+    "Sell Solana Prototype Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
 }
 
 // Call the main function to execute the example
