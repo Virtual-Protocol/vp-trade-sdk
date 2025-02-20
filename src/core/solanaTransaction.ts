@@ -1,10 +1,12 @@
 import {
+  AddressLookupTableAccount,
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
   sendAndConfirmTransaction,
   Transaction,
+  TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -163,13 +165,10 @@ export class SolanaTransactionManager {
   public async getQuoteResponse(
     config: GetQuoteConfig
   ): Promise<QuoteResponse> {
-    const url = `https://api.jup.ag/swap/v1/quote?inputMint=${
-      config.inputMint
-    }&outputMint=${config.outputMint}&amount=${
-      config.amount * (config.lamportUnit ?? LAMPORTS_PER_SOL)
-    }&slippageBps=${config.slippageBps}&restrictIntermediateTokens=${
-      config.restrictIntermediateTokens ?? true
-    }`;
+    const url = `https://api.jup.ag/swap/v1/quote?inputMint=${config.inputMint
+      }&outputMint=${config.outputMint}&amount=${config.amount * (config.lamportUnit ?? LAMPORTS_PER_SOL)
+      }&slippageBps=${config.slippageBps}&restrictIntermediateTokens=${config.restrictIntermediateTokens ?? true
+      }`;
 
     const headers = {
       "Content-Type": "application/json",
@@ -221,10 +220,10 @@ export class SolanaTransactionManager {
     return swapResponse;
   }
 
-  public transformTransaction(
+  public async transformTransaction(
     swapResponse: GetSerializedTransactionResponse,
     builderID?: number
-  ): Uint8Array {
+  ): Promise<Uint8Array> {
     const transactionBase64 = swapResponse.swapTransaction;
     const transaction = VersionedTransaction.deserialize(
       Buffer.from(transactionBase64, "base64")
@@ -232,23 +231,54 @@ export class SolanaTransactionManager {
 
     // ✅ Add SPL Memo instruction if provided
     if (builderID !== undefined) {
-      const memoInstruction = createMemoInstruction(builderID.toString(), [
-        this.wallet.payer.publicKey,
-      ]);
+      const memoInstruction: TransactionInstruction = createMemoInstruction(
+        builderID.toString(),
+        [this.wallet.payer.publicKey]
+      );
 
-      // Reconstruct the message with an additional instruction
-      const message = TransactionMessage.decompile(transaction.message);
-      message.instructions.push(memoInstruction);
+      // 🌐 Resolve address lookup tables (ALT)
+      if (transaction.message.addressTableLookups.length > 0) {
 
-      // Recompile the message
-      transaction.message = message.compileToV0Message();
+        const lookupTableAccounts: AddressLookupTableAccount[] = await Promise.all(
+          transaction.message.addressTableLookups.map(async (lookup) => {
+            const accountInfo = await this.connection.getAccountInfo(
+              new PublicKey(lookup.accountKey)
+            );
+
+            if (!accountInfo) {
+              throw new Error(`Address lookup table not found: ${lookup.accountKey}`);
+            }
+
+            return new AddressLookupTableAccount({
+              key: new PublicKey(lookup.accountKey),
+              state: AddressLookupTableAccount.deserialize(accountInfo.data),
+            });
+          })
+        );
+
+        // Decompile the message with resolved ALT
+        const message = TransactionMessage.decompile(transaction.message, {
+          addressLookupTableAccounts: lookupTableAccounts,
+        });
+
+        // ✅ Append the memo instruction
+        message.instructions.push(memoInstruction);
+
+        // 🔄 Recompile the message
+        transaction.message = message.compileToV0Message(lookupTableAccounts);
+      } else {
+        // No address table lookups, proceed as normal
+        const message = TransactionMessage.decompile(transaction.message);
+        message.instructions.push(memoInstruction);
+        transaction.message = message.compileToV0Message();
+      }
     }
 
+    // ✍️ Sign the updated transaction
     transaction.sign([this.wallet.payer]);
 
-    const transactionBinary = transaction.serialize();
-
-    return transactionBinary;
+    // 🔄 Serialize and return
+    return transaction.serialize();
   }
 
   public async swap(
@@ -275,7 +305,7 @@ export class SolanaTransactionManager {
     if (serializedTransaction?.simulationError) {
       throw new Error(serializedTransaction?.simulationError?.error ?? "");
     }
-    const transactionBinary = this.transformTransaction(
+    const transactionBinary = await this.transformTransaction(
       serializedTransaction,
       builderID
     );
