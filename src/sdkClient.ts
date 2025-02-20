@@ -104,7 +104,7 @@ export class SDKClient {
       this.prototype,
       this.sentient
     );
-    if (!!config.solanaPrivateKey) {
+    if (config.solanaPrivateKey) {
       this.solanaTransactionManager = new SolanaTransactionManager(
         config.solanaPrivateKey,
         {
