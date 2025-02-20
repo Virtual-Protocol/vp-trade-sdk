@@ -160,14 +160,20 @@ export class SolanaTransactionManager {
     return ata;
   }
 
-  public async getQuoteResponse(config: GetQuoteConfig): Promise<QuoteResponse> {
-    const url = `https://api.jup.ag/swap/v1/quote?inputMint=${config.inputMint
-      }&outputMint=${config.outputMint}&amount=${config.amount * (config.lamportUnit ?? LAMPORTS_PER_SOL)
-      }&slippageBps=${config.slippageBps}&restrictIntermediateTokens=${config.restrictIntermediateTokens ?? true}`;
+  public async getQuoteResponse(
+    config: GetQuoteConfig
+  ): Promise<QuoteResponse> {
+    const url = `https://api.jup.ag/swap/v1/quote?inputMint=${
+      config.inputMint
+    }&outputMint=${config.outputMint}&amount=${
+      config.amount * (config.lamportUnit ?? LAMPORTS_PER_SOL)
+    }&slippageBps=${config.slippageBps}&restrictIntermediateTokens=${
+      config.restrictIntermediateTokens ?? true
+    }`;
 
     const headers = {
       "Content-Type": "application/json",
-      ...(this.jupiterApiKey ? { "x-api-key": this.jupiterApiKey } : {}) // ✅ Clean conditional spread
+      ...(this.jupiterApiKey ? { "x-api-key": this.jupiterApiKey } : {}), // ✅ Clean conditional spread
     };
 
     const response = await fetch(url, { headers });
@@ -175,7 +181,6 @@ export class SolanaTransactionManager {
 
     return quoteResponse;
   }
-
 
   public async getSerializedTransaction(
     quoteResponse: QuoteResponse,
@@ -187,7 +192,7 @@ export class SolanaTransactionManager {
   ): Promise<GetSerializedTransactionResponse> {
     const headers = {
       "Content-Type": "application/json",
-      ...(this.jupiterApiKey ? { "x-api-key": this.jupiterApiKey } : {}) // ✅ Clean conditional spread
+      ...(this.jupiterApiKey ? { "x-api-key": this.jupiterApiKey } : {}), // ✅ Clean conditional spread
     };
 
     const body = JSON.stringify({
@@ -210,11 +215,11 @@ export class SolanaTransactionManager {
       body,
     });
 
-    const swapResponse: GetSerializedTransactionResponse = await response.json();
+    const swapResponse: GetSerializedTransactionResponse =
+      await response.json();
 
     return swapResponse;
   }
-
 
   public transformTransaction(
     swapResponse: GetSerializedTransactionResponse,
@@ -226,7 +231,7 @@ export class SolanaTransactionManager {
     );
 
     // ✅ Add SPL Memo instruction if provided
-    if (builderID) {
+    if (builderID !== undefined) {
       const memoInstruction = createMemoInstruction(builderID.toString(), [
         this.wallet.payer.publicKey,
       ]);
@@ -246,7 +251,10 @@ export class SolanaTransactionManager {
     return transactionBinary;
   }
 
-  public async swap(config: GetQuoteConfig, builderID?: number): Promise<string> {
+  public async swap(
+    config: GetQuoteConfig,
+    builderID?: number
+  ): Promise<string> {
     // ensure token accounts exist
     await this.ensureTokenAccountExist(
       config.inputMint,
@@ -267,7 +275,10 @@ export class SolanaTransactionManager {
     if (serializedTransaction?.simulationError) {
       throw new Error(serializedTransaction?.simulationError?.error ?? "");
     }
-    const transactionBinary = this.transformTransaction(serializedTransaction, builderID);
+    const transactionBinary = this.transformTransaction(
+      serializedTransaction,
+      builderID
+    );
     const signature = await this.connection.sendRawTransaction(
       transactionBinary,
       {
