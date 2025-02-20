@@ -2,10 +2,10 @@ import {
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
-  MessageCompiledInstruction,
   PublicKey,
   sendAndConfirmTransaction,
   Transaction,
+  TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -231,24 +231,13 @@ export class SolanaTransactionManager {
         this.wallet.payer.publicKey,
       ]);
 
-      // Convert TransactionInstruction to MessageCompiledInstruction
-      const compiledInstruction: MessageCompiledInstruction = {
-        programIdIndex: transaction.message.staticAccountKeys.findIndex(
-          (key) => key.equals(memoInstruction.programId)
-        ),
-        accountKeyIndexes: memoInstruction.keys.map((key) =>
-          transaction.message.staticAccountKeys.findIndex((acc) => acc.equals(key.pubkey))
-        ),
-        data: memoInstruction.data, // Ensure data is encoded correctly
-      };
+      // Reconstruct the message with an additional instruction
+      const message = TransactionMessage.decompile(transaction.message);
+      message.instructions.push(memoInstruction);
 
-      if (compiledInstruction.programIdIndex === -1) {
-        throw new Error("Program ID not found in staticAccountKeys.");
-      }
-
-      transaction.message.compiledInstructions.push(compiledInstruction);
+      // Recompile the message
+      transaction.message = message.compileToV0Message();
     }
-
 
     transaction.sign([this.wallet.payer]);
 

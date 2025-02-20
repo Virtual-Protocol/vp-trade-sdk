@@ -159,7 +159,7 @@ export class SDKClient {
         amount: +amount,
         slippageBps: option?.slippage ?? 100, // 100 bps = 1%
         lamportUnit: LAMPORTS_PER_SOL,
-      });
+      }, option?.builderID);
       return signature;
     }
 
@@ -498,10 +498,10 @@ export class SDKClient {
    * @param config GetQuoteConfig
    * @returns Transaction Signature
    */
-  public async swapSolanaTokens(config: GetQuoteConfig): Promise<string> {
+  public async swapSolanaTokens(config: GetQuoteConfig, builderID?: number): Promise<string> {
     if (!this.solanaTransactionManager)
       throw new Error("Invalid SOLANA wallet private key");
-    return await this.solanaTransactionManager.swap(config);
+    return await this.solanaTransactionManager.swap(config, builderID);
   }
 }
 
