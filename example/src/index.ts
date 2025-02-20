@@ -1,5 +1,7 @@
 import { SDKClient } from "vp-trade-sdk/sdkClient";
 import dotenv from "dotenv";
+import { AGENT_CHAIN_ID, CONFIG, KLINE_CHAIN_ID } from "vp-trade-sdk/constant";
+import { Trade } from "vp-trade-sdk/core/virtualProtocol";
 dotenv.config();
 
 const config = {
@@ -8,35 +10,121 @@ const config = {
   rpcApiKey: process.env.RPC_API_KEY || "",
   virtualApiUrl: process.env.VIRTUALS_API_URL || "",
   virtualApiUrlV2: process.env.VIRTUALS_API_URL_V2 || "",
+  solanaPrivateKey: process.env.SOLANA_PRIVATE_KEY || "",
+  solanaRpcUrl: process.env.SOLANA_RPC_URL || "",
+  solanaJupiterApiKey: process.env.SOLANA_JUPITER_API_KEY || "",
 };
 
 const sdkClient = new SDKClient(config);
-
 async function main() {
   try {
     const pageNumber = 1;
     const pageSize = 10;
-
-    const sentientTokens = await sdkClient.getSentientListing(pageNumber, pageSize);
-    console.log('Sentient Tokens length:', sentientTokens.tokens.length);
+    const sentientTokens = await sdkClient.getSentientListing(
+      pageNumber,
+      pageSize
+    );
+    console.log("Sentient Tokens length:", sentientTokens.tokens.length);
+    const baseSentientTokens = await sdkClient.getSentientListing(
+      pageNumber,
+      pageSize,
+      AGENT_CHAIN_ID.BASE
+    );
+    console.log(
+      "Base Sentient Tokens length:",
+      baseSentientTokens.tokens.length
+    );
+    const solanaSentientTokens = await sdkClient.getSentientListing(
+      pageNumber,
+      pageSize,
+      AGENT_CHAIN_ID.SOLANA
+    );
+    console.log(
+      "Solana Sentient Tokens length:",
+      solanaSentientTokens.tokens.length
+    );
     const topSentienTokenAddress = sentientTokens.tokens[0].tokenAddress;
-    console.log('Highest Total Value Locked Sentient Token address:', topSentienTokenAddress);
-    const topSentientTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topSentienTokenAddress);
-    console.log('Highest Total Value Locked Sentient Token details:', topSentientTokenDetails);
-
-    const prototypeTokens = await sdkClient.getPrototypeListing(pageNumber, pageSize);
-    console.log('Prototype Tokens length:', prototypeTokens.tokens.length);
+    console.log(
+      "Highest Total Value Locked Sentient Token address:",
+      topSentienTokenAddress
+    );
+    const topSentientTokenDetails =
+      await sdkClient.searchVirtualTokensByKeyword(topSentienTokenAddress);
+    console.log(
+      "Highest Total Value Locked Sentient Token details:",
+      topSentientTokenDetails
+    );
+    const prototypeTokens = await sdkClient.getPrototypeListing(
+      pageNumber,
+      pageSize
+    );
+    console.log("Prototype Tokens length:", prototypeTokens.tokens.length);
+    const basePrototypeTokens = await sdkClient.getPrototypeListing(
+      pageNumber,
+      pageSize,
+      AGENT_CHAIN_ID.BASE
+    );
+    console.log(
+      "Base Prototype Tokens length:",
+      basePrototypeTokens.tokens.length
+    );
+    const solanaPrototypeTokens = await sdkClient.getPrototypeListing(
+      pageNumber,
+      pageSize,
+      AGENT_CHAIN_ID.SOLANA
+    );
+    console.log(
+      "Solana Prototype Tokens length:",
+      solanaPrototypeTokens.tokens.length
+    );
     const topPrototypeTokenAddress = prototypeTokens.tokens[0].tokenAddress;
-    console.log('Highest Total Value Locked Prototype Token address:', topPrototypeTokenAddress);
-    const topPrototypeTokenDetails = await sdkClient.searchVirtualTokensByKeyword(topPrototypeTokenAddress);
-    console.log('Highest Total Value Locked Prototype Token details:', topPrototypeTokenDetails);
-
-    exampleFetchKlines(topPrototypeTokenAddress)
-
-    // exampleBuySentientToken();
-    // exampleSellSentientToken();
-    // exampleBuyPrototypeToken();
-    // exampleSellPrototypeToken();
+    console.log(
+      "Highest Total Value Locked Prototype Token address:",
+      topPrototypeTokenAddress
+    );
+    const topPrototypeTokenDetails =
+      await sdkClient.searchVirtualTokensByKeyword(topPrototypeTokenAddress);
+    console.log(
+      "Highest Total Value Locked Prototype Token details:",
+      topPrototypeTokenDetails
+    );
+    await exampleFetchKlines(
+      basePrototypeTokens.tokens[0].tokenAddress,
+      KLINE_CHAIN_ID.BASE
+    );
+    await exampleFetchKlines(
+      solanaPrototypeTokens.tokens[0].tokenAddress,
+      KLINE_CHAIN_ID.SOLANA
+    );
+    const baseTrades = await exampleFetchLatestTrades(
+      basePrototypeTokens.tokens[0].tokenAddress,
+      KLINE_CHAIN_ID.BASE
+    );
+    await exampleFetchLatestTrades(
+      solanaPrototypeTokens.tokens[0].tokenAddress,
+      KLINE_CHAIN_ID.SOLANA
+    );
+    if (baseTrades.length) {
+      // Example fetching trades of a specific sender address
+      console.log(
+        "Fetching trades of a specific sender address",
+        baseTrades?.[0]?.txSender
+      );
+      await exampleFetchLatestTrades(
+        topPrototypeTokenAddress,
+        KLINE_CHAIN_ID.BASE,
+        baseTrades?.[0]?.txSender
+      );
+    }
+    // await exampleBuySentientToken();
+    // await exampleSellSentientToken();
+    // await exampleBuyPrototypeToken();
+    // await exampleSellPrototypeToken();
+    // await exampleSwapSolanaTokens();
+    // await exampleBuySolanaSentientToken();
+    // await exampleSellSolanaSentientToken();
+    // await exampleBuySolanaPrototypeToken();
+    // await exampleSellSolanaPrototypeToken();
   } catch (error) {
     // Handle any errors
     if (error instanceof Error) {
@@ -144,24 +232,128 @@ async function exampleSellPrototypeToken() {
   );
 }
 
-async function exampleFetchKlines(prototypeTokenAddress: string) {
-    // Example: Fetch K-line data for prototype token only
-    try {
-        console.log("\n=== Example: Fetching K-line Data ===");
-        const klines = await sdkClient.fetchKlines({
-            tokenAddress: prototypeTokenAddress,
-            granularity: 60, // 1 minute intervals
-            start: Date.now() - 24 * 60 * 60 * 1000, // 1 hour ago
-            end: Date.now(), // current time
-            limit: 1000,
-        });
+async function exampleFetchKlines(
+  prototypeTokenAddress: string,
+  chainId: KLINE_CHAIN_ID
+) {
+  // Example: Fetch K-line data for prototype token only
+  try {
+    console.log("\n=== Example: Fetching K-line Data ===");
+    const klines = await sdkClient.fetchKlines({
+      tokenAddress: prototypeTokenAddress,
+      granularity: 60, // 1 minute intervals
+      start: Date.now() - 24 * 60 * 60 * 1000, // 1 hour ago
+      end: Date.now(), // current time
+      limit: 1000,
+      chainId: chainId,
+    });
 
-        console.log(`Successfully fetched ${klines.length} K-line records`);
-        console.log("First K-line data:", klines[0]);
-        console.log("Latest K-line data:", klines[klines.length - 1]);
-    } catch (error) {
-        console.error("Failed to fetch K-line data:", error);
-    }
+    console.log(`Successfully fetched ${klines.length} K-line records`);
+    console.log("First K-line data:", klines[0]);
+    console.log("Latest K-line data:", klines[klines.length - 1]);
+  } catch (error) {
+    console.error("Failed to fetch K-line data:", error);
+  }
+}
+
+async function exampleFetchLatestTrades(
+  prototypeTokenAddress: string,
+  chainId: KLINE_CHAIN_ID,
+  txSender?: string
+): Promise<Trade[]> {
+  // Example: Fetch trade data for prototype token only
+  try {
+    console.log("\n=== Example: Fetching Latest Trades ===");
+    const trades = await sdkClient.fetchLatestTrades({
+      tokenAddress: prototypeTokenAddress,
+      limit: 1000,
+      chainId: chainId,
+      txSender: txSender,
+    });
+
+    console.log(`Successfully fetched ${trades.length} trades`);
+    console.log("Latest trade data:", trades[0]);
+    console.log("Oldest trade data:", trades[trades.length - 1]);
+
+    return trades;
+  } catch (error) {
+    console.error("Failed to fetch latest trades:", error);
+    return [];
+  }
+}
+
+async function exampleSwapSolanaTokens() {
+  // Swap any 2 tokens (More configurations available)
+  // Example provided is 0.0001 SOL to VIRTUALS, slippage is 100 bps (1%)
+  // Highly recommended to use own SOLANA RPC to increase the speed and success rate of the transaction
+  const signature = await sdkClient.swapSolanaTokens({
+    inputMint: "So11111111111111111111111111111111111111112",
+    outputMint: CONFIG.SOLANA_VIRTUALS_TOKEN_ADDR,
+    amount: 0.0001,
+    slippageBps: 100,
+  });
+  console.log(
+    "Swap Solana Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
+}
+
+async function exampleBuySolanaSentientToken() {
+  const signature = await sdkClient.buySentientTokens(
+    "C1nzFL2DD3Wqc3dzRbsrpb6tiZ6dbYsXubjVtzyHvirt", // TracyAI token address
+    "0.0001",
+    undefined,
+    AGENT_CHAIN_ID.SOLANA
+  );
+  console.log(
+    "Buy Solana Sentient Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
+}
+
+async function exampleSellSolanaSentientToken() {
+  const signature = await sdkClient.sellSentientTokens(
+    "C1nzFL2DD3Wqc3dzRbsrpb6tiZ6dbYsXubjVtzyHvirt", // TracyAI token address
+    "0.00001",
+    {
+      slippage: 200, // 2% slippage
+    },
+    AGENT_CHAIN_ID.SOLANA
+  );
+  console.log(
+    "Sell Solana Sentient Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
+}
+
+async function exampleBuySolanaPrototypeToken() {
+  const signature = await sdkClient.buyPrototypeTokens(
+    "GABU7ezujrMejFU7AcNep14dkr1yFM7RWWtYfcJJvirt", // $PAT token address
+    "0.0001",
+    {
+      slippage: 200, // 2% slippage
+    },
+    AGENT_CHAIN_ID.SOLANA
+  );
+  console.log(
+    "Buy Solana Prototype Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
+}
+
+async function exampleSellSolanaPrototypeToken() {
+  const signature = await sdkClient.sellPrototypeTokens(
+    "GABU7ezujrMejFU7AcNep14dkr1yFM7RWWtYfcJJvirt", // $PAT token address
+    "0.0001",
+    {
+      slippage: 200, // 2% slippage
+    },
+    AGENT_CHAIN_ID.SOLANA
+  );
+  console.log(
+    "Sell Solana Prototype Token Transaction:",
+    `https://solscan.io/tx/${signature}`
+  );
 }
 
 // Call the main function to execute the example

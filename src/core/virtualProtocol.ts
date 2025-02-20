@@ -1,6 +1,12 @@
 import dotenv from "dotenv";
 import needle from "needle";
-import { FILTER_AGENT_STATUS, TokenType } from "./../constant";
+import {
+  AGENT_CHAIN_ID,
+  AGENT_CHAIN_MAP,
+  FILTER_AGENT_STATUS,
+  KLINE_CHAIN_ID,
+  TokenType,
+} from "./../constant";
 
 dotenv.config();
 
@@ -30,6 +36,7 @@ interface Token {
     id: number; // ID of the image resource
     url: string; // URL of the image (e.g., the token's logo)
   };
+  chain: string; // Chain of the token
 }
 
 interface VirtualApiConfig {
@@ -49,12 +56,31 @@ export interface KLine {
   endInMilli: number; // End time in millisecond
 }
 
+export interface Trade {
+  txSender: string; // Transaction sender
+  txHash: string; // Transaction hash
+  tokenAddress: string; // Token address
+  isBuy: boolean; // Whether the trade is a buy
+  agentTokenAmt: string; // Amount of prototype token
+  virtualTokenAmt: string; // Amount of virtual token worth
+  price: string; // Price of the trade in virtual
+  timestamp: number; // Timestamp in seconds
+}
+
 export interface GetKlinesParams {
   tokenAddress: string; // Token address to get klines for
   granularity: number; // Time granularity in seconds
   start: number; // Start time in milliseconds (UTC)
   end: number; // End time in milliseconds (UTC)
   limit: number; // Maximum number of klines to return
+  chainId?: KLINE_CHAIN_ID; // Chain ID
+}
+
+export interface GetLatestTradesParams {
+  tokenAddress: string; // Token address to get klines for
+  limit: number; // Maximum number of klines to return
+  chainId?: KLINE_CHAIN_ID; // Chain ID
+  txSender?: string; // Transaction sender
 }
 
 class VirtualApiManager {
@@ -94,9 +120,13 @@ class VirtualApiManager {
       const queryString = new URLSearchParams(queryParams).toString();
 
       // Make the GET request to Virtuals API
-      const response = await needle("get", `${this.apiUrl}/api/virtuals?${queryString}`, {
-        headers: { accept: "application/json" },
-      });
+      const response = await needle(
+        "get",
+        `${this.apiUrl}/api/virtuals?${queryString}`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
 
       if (response.statusCode !== 200) {
         throw new Error(
@@ -125,6 +155,7 @@ class VirtualApiManager {
           id: item.image?.id ?? 0,
           url: item.image?.url ?? "",
         },
+        chain: item.chain ?? "",
       }))[0];
     } catch (error: unknown) {
       const errorMessage =
@@ -144,11 +175,12 @@ class VirtualApiManager {
    */
   public async fetchVirtualTokenLists(
     type: string,
+    agentChainId: AGENT_CHAIN_ID,
     page: number,
     pageSize: number
   ): Promise<TokenList> {
     try {
-      const queryParams = {
+      const queryParams: { [key: string]: string } = {
         "filters[status]": "",
         "sort[0]": "",
         "sort[1]": "createdAt:desc",
@@ -168,13 +200,21 @@ class VirtualApiManager {
         queryParams["sort[0]"] = "virtualTokenValue:desc";
       }
 
+      if (agentChainId !== AGENT_CHAIN_ID.ALL) {
+        queryParams["filters[chain]"] = AGENT_CHAIN_MAP[agentChainId];
+      }
+
       // Use URLSearchParams to build the query string
       const queryString = new URLSearchParams(queryParams).toString();
 
       // Make the GET request to Virtuals API
-      const response = await needle("get", `${this.apiUrl}/api/virtuals?${queryString}`, {
-        headers: { accept: "application/json" },
-      });
+      const response = await needle(
+        "get",
+        `${this.apiUrl}/api/virtuals?${queryString}`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
 
       if (response.statusCode !== 200) {
         throw new Error(
@@ -204,6 +244,7 @@ class VirtualApiManager {
             id: item.image?.id ?? 0,
             url: item.image?.url ?? "",
           },
+          chain: item.chain ?? "",
         })),
       };
     } catch (error: unknown) {
@@ -228,6 +269,7 @@ class VirtualApiManager {
         start: params.start.toString(),
         end: params.end.toString(),
         limit: params.limit.toString(),
+        chainID: (params.chainId ?? KLINE_CHAIN_ID.BASE).toString(),
       };
 
       const queryString = new URLSearchParams(queryParams).toString();
@@ -264,6 +306,58 @@ class VirtualApiManager {
           ? error.message
           : "An unknown error occurred while fetching klines.";
       throw new Error(`Error fetching klines: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Fetch latest trades for a specific token
+   * @param params Parameters for the latest trades data request
+   * @returns Array of Trade data
+   */
+  public async fetchLatestTrades(
+    params: GetLatestTradesParams
+  ): Promise<Trade[]> {
+    try {
+      const queryParams = {
+        tokenAddress: params.tokenAddress,
+        limit: params.limit.toString(),
+        chainID: (params.chainId ?? KLINE_CHAIN_ID.BASE).toString(),
+        txSender: params.txSender ?? "",
+      };
+
+      const queryString = new URLSearchParams(queryParams).toString();
+
+      const response = await needle(
+        "get",
+        `${this.apiUrlV2}/vp-api/trades?${queryString}`,
+        {
+          headers: { accept: "application/json" },
+        }
+      );
+
+      if (response.statusCode !== 200) {
+        throw new Error(
+          `Failed to fetch trades. Status code: ${response.statusCode}`
+        );
+      }
+
+      // Access the correct path in response data
+      return response.body.data.Trades.map((item: Trade) => ({
+        txSender: item.txSender,
+        txHash: item.txHash,
+        tokenAddress: item.tokenAddress,
+        isBuy: item.isBuy,
+        agentTokenAmt: item.agentTokenAmt,
+        virtualTokenAmt: item.virtualTokenAmt,
+        price: item.price,
+        timestamp: item.timestamp,
+      }));
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred while fetching trades.";
+      throw new Error(`Error fetching trades: ${errorMessage}`);
     }
   }
 }
