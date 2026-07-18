@@ -1,10 +1,13 @@
 import {
+  AddressLookupTableAccount,
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
   sendAndConfirmTransaction,
   Transaction,
+  TransactionInstruction,
+  TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -16,6 +19,7 @@ import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { createMemoInstruction } from "@solana/spl-memo";
 
 const DEFAULT_RPC_URL = "https://api.mainnet-beta.solana.com";
 
@@ -29,7 +33,7 @@ export type GetQuoteConfig = {
   skipPreflight?: boolean; // whether to skip preflight
   lamportUnit?: number; // lamport unit, e.g. SOLANA and VIRTUAL are 1e9, agent tokens are 1e6
   jupiterConfig?: {
-    prioritizationFeeLamports?: any;
+    prioritizationFeeLamports?: never;
     dynamicComputeUnitLimit?: boolean;
     dynamicSlippage?: boolean;
   };
@@ -161,85 +165,126 @@ export class SolanaTransactionManager {
   public async getQuoteResponse(
     config: GetQuoteConfig
   ): Promise<QuoteResponse> {
-    // Swapping SOL to USDC with input 0.1 SOL and 0.5% slippage
-    const quoteResponse: QuoteResponse = await (
-      await fetch(
-        `https://api.jup.ag/swap/v1/quote?inputMint=${
-          config.inputMint
-        }&outputMint=${config.outputMint}&amount=${
-          config.amount * (config.lamportUnit ?? LAMPORTS_PER_SOL)
-        }&slippageBps=${config.slippageBps}&restrictIntermediateTokens=${
-          config.restrictIntermediateTokens ?? true
-        }`,
-        {
-          headers: !!this.jupiterApiKey
-            ? {
-                "Content-Type": "application/json",
-                "x-api-key": this.jupiterApiKey,
-              }
-            : {
-                "Content-Type": "application/json",
-              },
-        }
-      )
-    ).json();
+    const url = `https://api.jup.ag/swap/v1/quote?inputMint=${config.inputMint
+      }&outputMint=${config.outputMint}&amount=${config.amount * (config.lamportUnit ?? LAMPORTS_PER_SOL)
+      }&slippageBps=${config.slippageBps}&restrictIntermediateTokens=${config.restrictIntermediateTokens ?? true
+      }`;
+
+    const headers = {
+      "Content-Type": "application/json",
+      ...(this.jupiterApiKey ? { "x-api-key": this.jupiterApiKey } : {}), // ✅ Clean conditional spread
+    };
+
+    const response = await fetch(url, { headers });
+    const quoteResponse: QuoteResponse = await response.json();
+
     return quoteResponse;
   }
 
   public async getSerializedTransaction(
     quoteResponse: QuoteResponse,
     jupiterConfig?: {
-      prioritizationFeeLamports?: any;
+      prioritizationFeeLamports?: never;
       dynamicComputeUnitLimit?: boolean;
       dynamicSlippage?: boolean;
     }
   ): Promise<GetSerializedTransactionResponse> {
-    const swapResponse = await (
-      await fetch("https://api.jup.ag/swap/v1/swap", {
-        method: "POST",
-        headers: !!this.jupiterApiKey
-          ? {
-              "Content-Type": "application/json",
-              "x-api-key": this.jupiterApiKey,
-            }
-          : {
-              "Content-Type": "application/json",
-            },
-        body: JSON.stringify({
-          quoteResponse,
-          userPublicKey: this.wallet.publicKey.toString(),
-          dynamicComputeUnitLimit: true,
-          dynamicSlippage: true,
-          prioritizationFeeLamports: {
-            priorityLevelWithMaxLamports: {
-              maxLamports: 1000000,
-              priorityLevel: "veryHigh",
-            },
-          },
-          ...(jupiterConfig ?? {}),
-        }),
-      })
-    ).json();
+    const headers = {
+      "Content-Type": "application/json",
+      ...(this.jupiterApiKey ? { "x-api-key": this.jupiterApiKey } : {}), // ✅ Clean conditional spread
+    };
+
+    const body = JSON.stringify({
+      quoteResponse,
+      userPublicKey: this.wallet.publicKey.toString(),
+      dynamicComputeUnitLimit: true,
+      dynamicSlippage: true,
+      prioritizationFeeLamports: {
+        priorityLevelWithMaxLamports: {
+          maxLamports: 1000000,
+          priorityLevel: "veryHigh",
+        },
+      },
+      ...(jupiterConfig ?? {}),
+    });
+
+    const response = await fetch("https://api.jup.ag/swap/v1/swap", {
+      method: "POST",
+      headers,
+      body,
+    });
+
+    const swapResponse: GetSerializedTransactionResponse =
+      await response.json();
 
     return swapResponse;
   }
 
-  public transformTransaction(
-    swapResponse: GetSerializedTransactionResponse
-  ): Uint8Array {
+  public async transformTransaction(
+    swapResponse: GetSerializedTransactionResponse,
+    builderID?: number
+  ): Promise<Uint8Array> {
     const transactionBase64 = swapResponse.swapTransaction;
     const transaction = VersionedTransaction.deserialize(
       Buffer.from(transactionBase64, "base64")
     );
 
+    // ✅ Add SPL Memo instruction if provided
+    if (builderID !== undefined) {
+      const memoInstruction: TransactionInstruction = createMemoInstruction(
+        builderID.toString(),
+        [this.wallet.payer.publicKey]
+      );
+
+      // 🌐 Resolve address lookup tables (ALT)
+      if (transaction.message.addressTableLookups.length > 0) {
+
+        const lookupTableAccounts: AddressLookupTableAccount[] = await Promise.all(
+          transaction.message.addressTableLookups.map(async (lookup) => {
+            const accountInfo = await this.connection.getAccountInfo(
+              new PublicKey(lookup.accountKey)
+            );
+
+            if (!accountInfo) {
+              throw new Error(`Address lookup table not found: ${lookup.accountKey}`);
+            }
+
+            return new AddressLookupTableAccount({
+              key: new PublicKey(lookup.accountKey),
+              state: AddressLookupTableAccount.deserialize(accountInfo.data),
+            });
+          })
+        );
+
+        // Decompile the message with resolved ALT
+        const message = TransactionMessage.decompile(transaction.message, {
+          addressLookupTableAccounts: lookupTableAccounts,
+        });
+
+        // ✅ Append the memo instruction
+        message.instructions.push(memoInstruction);
+
+        // 🔄 Recompile the message
+        transaction.message = message.compileToV0Message(lookupTableAccounts);
+      } else {
+        // No address table lookups, proceed as normal
+        const message = TransactionMessage.decompile(transaction.message);
+        message.instructions.push(memoInstruction);
+        transaction.message = message.compileToV0Message();
+      }
+    }
+
+    // ✍️ Sign the updated transaction
     transaction.sign([this.wallet.payer]);
 
-    const transactionBinary = transaction.serialize();
-
-    return transactionBinary;
+    // 🔄 Serialize and return
+    return transaction.serialize();
   }
 
-  public async swap(config: GetQuoteConfig): Promise<string> {
+  public async swap(
+    config: GetQuoteConfig,
+    builderID?: number
+  ): Promise<string> {
     // ensure token accounts exist
     await this.ensureTokenAccountExist(
       config.inputMint,
@@ -260,7 +305,10 @@ export class SolanaTransactionManager {
     if (serializedTransaction?.simulationError) {
       throw new Error(serializedTransaction?.simulationError?.error ?? "");
     }
-    const transactionBinary = this.transformTransaction(serializedTransaction);
+    const transactionBinary = await this.transformTransaction(
+      serializedTransaction,
+      builderID
+    );
     const signature = await this.connection.sendRawTransaction(
       transactionBinary,
       {

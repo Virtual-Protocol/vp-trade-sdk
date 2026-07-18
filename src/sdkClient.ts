@@ -104,7 +104,7 @@ export class SDKClient {
       this.prototype,
       this.sentient
     );
-    if (!!config.solanaPrivateKey) {
+    if (config.solanaPrivateKey) {
       this.solanaTransactionManager = new SolanaTransactionManager(
         config.solanaPrivateKey,
         {
@@ -153,13 +153,16 @@ export class SDKClient {
     const to = tokenAddress;
 
     if (agentChainId === AGENT_CHAIN_ID.SOLANA) {
-      const signature = await this.swapSolanaTokens({
-        inputMint: from,
-        outputMint: to,
-        amount: +amount,
-        slippageBps: option?.slippage ?? 100, // 100 bps = 1%
-        lamportUnit: LAMPORTS_PER_SOL,
-      });
+      const signature = await this.swapSolanaTokens(
+        {
+          inputMint: from,
+          outputMint: to,
+          amount: +amount,
+          slippageBps: option?.slippage ?? 100, // 100 bps = 1%
+          lamportUnit: LAMPORTS_PER_SOL,
+        },
+        option?.builderID
+      );
       return signature;
     }
 
@@ -198,13 +201,16 @@ export class SDKClient {
         : CONFIG.VIRTUALS_TOKEN_ADDR;
 
     if (agentChainId === AGENT_CHAIN_ID.SOLANA) {
-      const signature = await this.swapSolanaTokens({
-        inputMint: from,
-        outputMint: to,
-        amount: +amount,
-        slippageBps: option?.slippage ?? 100, // 100 bps = 1%
-        lamportUnit: 1e6,
-      });
+      const signature = await this.swapSolanaTokens(
+        {
+          inputMint: from,
+          outputMint: to,
+          amount: +amount,
+          slippageBps: option?.slippage ?? 100, // 100 bps = 1%
+          lamportUnit: 1e6,
+        },
+        option?.builderID
+      );
       return signature;
     }
 
@@ -243,13 +249,16 @@ export class SDKClient {
     const to = tokenAddress;
 
     if (agentChainId === AGENT_CHAIN_ID.SOLANA) {
-      const signature = await this.swapSolanaTokens({
-        inputMint: from,
-        outputMint: to,
-        amount: +amount,
-        slippageBps: option?.slippage ?? 100, // 100 bps = 1%
-        lamportUnit: LAMPORTS_PER_SOL,
-      });
+      const signature = await this.swapSolanaTokens(
+        {
+          inputMint: from,
+          outputMint: to,
+          amount: +amount,
+          slippageBps: option?.slippage ?? 100, // 100 bps = 1%
+          lamportUnit: LAMPORTS_PER_SOL,
+        },
+        option?.builderID
+      );
       return signature;
     }
 
@@ -289,13 +298,16 @@ export class SDKClient {
         : CONFIG.VIRTUALS_TOKEN_ADDR;
 
     if (agentChainId === AGENT_CHAIN_ID.SOLANA) {
-      const signature = await this.swapSolanaTokens({
-        inputMint: from,
-        outputMint: to,
-        amount: +amount,
-        slippageBps: option?.slippage ?? 100, // 100 bps = 1%
-        lamportUnit: 1e6,
-      });
+      const signature = await this.swapSolanaTokens(
+        {
+          inputMint: from,
+          outputMint: to,
+          amount: +amount,
+          slippageBps: option?.slippage ?? 100, // 100 bps = 1%
+          lamportUnit: 1e6,
+        },
+        option?.builderID
+      );
       return signature;
     }
 
@@ -498,10 +510,13 @@ export class SDKClient {
    * @param config GetQuoteConfig
    * @returns Transaction Signature
    */
-  public async swapSolanaTokens(config: GetQuoteConfig): Promise<string> {
+  public async swapSolanaTokens(
+    config: GetQuoteConfig,
+    builderID?: number
+  ): Promise<string> {
     if (!this.solanaTransactionManager)
       throw new Error("Invalid SOLANA wallet private key");
-    return await this.solanaTransactionManager.swap(config);
+    return await this.solanaTransactionManager.swap(config, builderID);
   }
 }
 
