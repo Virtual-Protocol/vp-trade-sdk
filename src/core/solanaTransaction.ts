@@ -166,9 +166,9 @@ export class SolanaTransactionManager {
       await fetch(
         `https://api.jup.ag/swap/v1/quote?inputMint=${
           config.inputMint
-        }&outputMint=${config.outputMint}&amount=${
-          config.amount * (config.lamportUnit ?? LAMPORTS_PER_SOL)
-        }&slippageBps=${config.slippageBps}&restrictIntermediateTokens=${
+        }&outputMint=${config.outputMint}&amount=${BigInt(
+          Math.round(config.amount * (config.lamportUnit ?? LAMPORTS_PER_SOL))
+        )}&slippageBps=${config.slippageBps}&restrictIntermediateTokens=${
           config.restrictIntermediateTokens ?? true
         }`,
         {
